@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.lomtom.website_university.dao.ApplyDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.lomtom.website_university.entity.ApplyEntity" id="applyMap">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="address" column="address"/>
+        <result property="degree" column="degree"/>
+        <result property="years" column="years"/>
+        <result property="major" column="major"/>
+        <result property="outsideDate" column="outside_date"/>
+        <result property="university" column="university"/>
+        <result property="score" column="score"/>
+        <result property="tel" column="tel"/>
+        <result property="applyDate" column="apply_date"/>
+    </resultMap>
+
+
+</mapper>

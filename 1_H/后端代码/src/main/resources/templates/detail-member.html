@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ch"  xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title th:text="${profile.profileCnname}"></title>
+    <div th:replace="bar::css-js"></div>
+</head><!--/head-->
+<body>
+<div th:replace="bar::header"></div>
+<!--/#header-->
+<section id="page-breadcrumb">
+    <div class="vertical-center sun">
+        <div class="container">
+            <div class="row">
+                <div class="action">
+                    <div class="col-sm-12">
+                        <h1 class="title" th:text="${profile.profileCnname}"></h1>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<section id="about-company" class="padding-top wow fadeInUp animated" data-wow-duration="400ms" data-wow-delay="400ms" style="visibility: visible; animation-duration: 400ms; animation-delay: 400ms; animation-name: fadeInUp;">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12 text-center">
+                <img src="images/aboutus/5.png" th:src="@{/}+${profile.profilePicpath}" class="margin-bottom" alt="" style="height: 300px;">
+                <h1 class="margin-bottom" th:text="${profile.profileCnname}"></h1>
+                <p th:text="${profile.profileIntro}"></p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="services">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-4 text-center padding wow fadeIn animated" data-wow-duration="1000ms" data-wow-delay="300ms" style="visibility: visible; animation-duration: 1000ms; animation-delay: 300ms; animation-name: fadeIn;">
+                <div class="single-service">
+                    <h2>工作领域</h2>
+                    <p th:text="${profile.profileStudydir}"></p>
+                </div>
+            </div>
+            <div class="col-sm-4 text-center padding wow fadeIn animated" data-wow-duration="1000ms" data-wow-delay="600ms" style="visibility: visible; animation-duration: 1000ms; animation-delay: 600ms; animation-name: fadeIn;">
+                <div class="single-service">
+                    <h2>工作经历</h2>
+                    <p th:text="${profile.profileWorkexp}"></p>
+                </div>
+            </div>
+            <div class="col-sm-4 text-center padding wow fadeIn animated" data-wow-duration="1000ms" data-wow-delay="900ms" style="visibility: visible; animation-duration: 1000ms; animation-delay: 900ms; animation-name: fadeIn;">
+                <div class="single-service">
+                    <h2>教育背景</h2>
+                    <p th:text="${profile.profileEdubackground}"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div th:replace="bar::footer"></div>
+<!--/#footer-->
+
+</body>
+</html>

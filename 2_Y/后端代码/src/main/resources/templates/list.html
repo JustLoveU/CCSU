@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ch"  xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <!-- 强制Chromium内核，作用于360浏览器、QQ浏览器等国产双核浏览器 -->
+    <meta name="renderer" content="webkit"/>
+
+    <!-- 强制Chromium内核，作用于其他双核浏览器 -->
+    <meta name="force-rendering" content="webkit"/>
+
+    <!-- 如果有安装 Google Chrome Frame 插件则强制为Chromium内核，否则强制本机支持的最高版本IE内核，作用于IE浏览器 -->
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1"/>
+    <title th:text="${search==null?s:'搜索：'+search}">Title</title>
+</head>
+<body>
+<div th:replace="bar::css"></div>
+
+<!-- main banner -->
+<div class="main-top" id="home">
+
+    <div th:replace="bar::header"></div>
+    <div class="banner_w3lspvt-2"></div>
+
+
+
+
+
+    <div class="blog-w3l py-5">
+        <div class="container py-xl-5 py-lg-3">
+            <h4 class="title-w3 text-bl  font-weight-bold mb-sm-5 mb-4" >
+                <img th:src="@{/images/icon-5.png}">  <span th:text="${search==null?s:'搜索：'+search}"></span>
+                <span style="float: right;font-size: small" th:text="'一共'+${article.total}+'条数据'"></span>
+            </h4>
+            <div class="row blog-content pt-lg-3">
+                <!-- left side -->
+                <div class="col-lg-12 blog_section">
+                    <div class="card border-0" th:each="item:${article.list}">
+                        <div class="card-body">
+                            <div class="row border-bottom pb-3">
+                                <div class="col-sm-9 col-4 perso-wthree">
+                                    <a th:href="${item.url}==null?@{/article/}+${item.id}:${item.url}" target="_blank" class="text-bl font-weight-bold  mt-4 mb-3" th:text="${item.title}"></a>
+                                </div>
+                                <div class="col-sm-3 col-8 info-commt text-right">
+                                    <ul class="blog_list ">
+                                        <li class="mx-3" th:if="${item.url}==null">
+                                            <img th:src="@{/images/icon_6.png}" style="    width: 20px;"><span th:text="${'  '+item.view}"></span>
+                                        </li>
+                                        <li ><img th:src="@{/images/icon_7.png}" style="    width: 20px;"><span th:text="${'  '+#dates.format(item.data,'yyyy-MM-dd')}"></span></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div aria-label="Page navigation example" th:if="${article.total!=0}">
+                        <ul class="pagination mt-5" th:if="${search==null}">
+                            <li></li>
+                            <li class="page-item" th:class="${!article.isFirstPage}?'page-item':'page-item disabled'"><a class="page-link" th:href="${#httpServletRequest.requestURI}+'?pageNum='+${article.firstPage}+'&nav='+${nav}">首页</a></li>
+                            <li class="page-item" th:class="${!article.isFirstPage}?'page-item':'page-item disabled'"><a  class="page-link" th:href="${#httpServletRequest.requestURI}+'?pageNum='+${article.prePage}+'&nav='+${nav}">上一页</a></li>
+                            <li class="page-item disabled" ><a href="#" class="page-link" th:text="${article.pageNum+'/'+article.pages}"></a></li>
+                            <li class="page-item" th:class="${!article.isLastPage}?'page-item':'page-item disabled'"><a class="page-link" th:href="${#httpServletRequest.requestURI}+'?pageNum='+${article.nextPage}+'&nav='+${nav}">下一页</a></li>
+                            <li class="page-item" th:class="${!article.isLastPage}?'page-item':'page-item disabled'"><a class="page-link" th:href="${#httpServletRequest.requestURI}+'?pageNum='+${article.lastPage}+'&nav='+${nav}">尾页</a></li>
+                            <li></li>
+                        </ul>
+                        <ul class="pagination mt-5" th:if="${search!=null}">
+                            <li></li>
+                            <li class="page-item" th:class="${!article.isFirstPage}?'page-item':'page-item disabled'"><a class="page-link" th:href="${#httpServletRequest.requestURI}+'?pageNum='+${article.firstPage+'&title='+search}">首页</a></li>
+                            <li class="page-item" th:class="${!article.isFirstPage}?'page-item':'page-item disabled'"><a class="page-link" th:href="${#httpServletRequest.requestURI}+'?pageNum='+${article.prePage}+'&title='+${search}">上一页</a></li>
+                            <li class="page-item disabled"><a href="#" disabled=""  class="page-link" th:text="${article.pageNum+'/'+article.pages}"></a></li>
+                            <li class="page-item" th:class="${!article.isLastPage}?'page-item':'page-item disabled'"><a class="page-link" th:href="${#httpServletRequest.requestURI}+'?pageNum='+${article.nextPage}+'&title='+${search}">下一页</a></li>
+                            <li class="page-item" th:class="${!article.isLastPage}?'page-item':'page-item disabled'"><a class="page-link" th:href="${#httpServletRequest.requestURI}+'?pageNum='+${article.lastPage+'&title='+search}">尾页</a></li>
+                            <li></li>
+                        </ul>
+                    </div>
+
+                    <div class="col-sm-12" th:if="${article.total==0}">
+                        <div class="clients text-center wow fadeInUp animated" data-wow-duration="500ms" data-wow-delay="300ms" style="visibility: visible; animation-duration: 500ms; animation-delay: 300ms; animation-name: fadeInUp;">
+                            <h1 class="title">这儿还没有数据 T.B.D</h1>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <div th:replace="bar::footer"></div>
+    <div th:replace="bar::top"></div>
+</div>
+</body>
+</html>

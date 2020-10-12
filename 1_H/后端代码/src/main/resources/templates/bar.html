@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ch"  xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>Home | Triangle</title>
+</head><!--/head-->
+
+<body>
+<header id="header" th:fragment="header">
+    <div class="navbar navbar-inverse" role="banner">
+        <div class="container">
+            <div class="navbar-header">
+                <a class="navbar-brand" th:href="@{/index}">
+                    <h1><img src="/img/logo.png" th:src="@{/images/bbb.png}" style="width: 300px;height: 100%;" alt="logo"></h1>
+                </a>
+            </div>
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" style="background-color:#fff" aria-expanded="true">
+                <span>菜单</span>
+            </button>
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a th:href="@{/index}" style="font-size: 16px">首页</a></li>
+                    <li class="dropdown" th:each="item:${nav}" th:if="${item.sonNav!='[]'}"><a href="#"><span th:text="${item.name}" style="font-size: 16px"></span><i class="fa fa-angle-down"></i></a>
+                        <ul role="menu" class="sub-menu" style="width: 140px;" >
+                            <li th:each="item1:${item.sonNav}"><a th:href="@{/nav/}+${item1.type}+'/'+${item1.id}" th:text="${item1.name}" style="font-size: 16px">实验室简介</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown" ><a href="#"><span style="font-size: 16px">管理</span><i class="fa fa-angle-down"></i></a>
+                        <ul role="menu" class="sub-menu" style="width: 140px;">
+                            <li ><a th:href="@{/index.html}" target="_blank" style="font-size: 16px">管理员登录</a></li>
+                            <li ><a href="http://121.41.7.80:5000/" style="font-size: 16px" target="_blank">实验室文件系统</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            <div class="search">
+                <form role="form" th:action="@{/search}" method="get">
+                    <i class="fa fa-search"></i>
+                    <div class="field-toggle">
+                        <input type="text" class="search-form" name="title" autocomplete="off" placeholder="Search">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</header>
+<!--/#header-->
+
+<footer id="footer" th:fragment="footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12 text-center bottom-separator">
+                <img th:src="@{/images/home/under.png}" class="img-responsive inline" alt="">
+            </div>
+            <div class="col-sm-12">
+                <h2>友情链接</h2>
+                <div class="col-md-3" th:each="item:${friend}">
+                    <a   th:href="${item.url}"><p style="white-space: nowrap;overflow: hidden;text-overflow: ellipsis;width: 99%;" th:text="${item.name}"></p></a>
+                </div>
+            </div>
+            <div class="col-sm-12">
+                <div class="copyright-text text-center">
+                    <p th:utext="${other1.content}"></p>
+<!--                    <a target="_blank" href="http://www.beian.miit.gov.cn/">湘ICP备000号 </a>-->
+<!--                    <p>超级计算与云计算研究所 All rights reserved.</p>-->
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+<!--/#footer-->
+
+<div th:fragment="css-js">
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <link href="/css/font-awesome.min.css" th:href="@{/css/font-awesome.min.css}" rel="stylesheet">
+    <link href="/css/animate.min.css" th:href="@{/css/animate.min.css}" rel="stylesheet">
+    <link href="/css/lightbox.css"  th:href="@{/css/lightbox.css}" rel="stylesheet">
+    <link href="/css/main.css"  th:href="@{/css/main.css}" rel="stylesheet">
+    <link href="/css/responsive.css" th:href="@{/css/responsive.css}" rel="stylesheet">
+
+    <!--[if lt IE 9]>
+    <script src="/js/html5shiv.js"></script>
+    <script src="/js/respond.min.js"></script>
+    <![endif]-->
+    <script type="text/javascript" th:src="@{/js/jquery.min.js}"></script>
+    <script type="text/javascript" th:src="@{/js/bootstrap.min.js}"></script>
+    <script type="text/javascript" th:src="@{/js/lightbox.min.js}"></script>
+    <script type="text/javascript" th:src="@{/js/wow.min.js}"></script>
+    <script type="text/javascript" th:src="@{/js/main.js}"></script>
+</div>
+</body>
+</html>

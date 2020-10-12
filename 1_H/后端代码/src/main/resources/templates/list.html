@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ch"  xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title  th:text="${search==null?nav_now.name:'搜索：'+search}" >列表</title>
+    <div th:replace="bar::css-js"></div>
+</head><!--/head-->
+<body>
+    <div th:replace="bar::header"></div>
+    <!--/#header-->
+    <div class="container">
+        <div id="testimonial-container">
+            <div class="row">
+                <div class="col-md-12">
+                    <h2 class="page-header"><img th:src="@{/images/icon-5.png}">
+                        <span  th:text="${search==null?nav_now.parentNav.name+' > '+nav_now.name:'搜索：'+search}" ></span>
+                        <span style="float: right;font-size: small" th:text="'一共'+${article.total}+'条数据'"></span>
+                    </h2>
+                    <div th:each="item:${article.list}">
+                        <a th:href="${item.url}==null?@{/article/}+${item.id}:${item.url}" target="_blank">
+                            <div class="col-md-9">
+                                <p style="white-space: nowrap;overflow: hidden;text-overflow: ellipsis;width: 99%;" th:text="${item.title}"></p>
+                            </div>
+                            <div class="col-md-3" style="font-size: small" th:text="${#dates.format(item.data,'yyyy-MM-dd')}">2019-04-03</div>
+                        </a>
+                    </div>
+                </div>
+                <div class="portfolio-pagination" th:if="${article.total!=0}">
+                    <ul class="pagination" th:if="${search==null}">
+                        <li></li>
+                        <li th:if="${!article.isFirstPage}"><a th:href="${#httpServletRequest.requestURI}+'?pageNum='+${article.firstPage}">首页</a></li>
+                        <li th:if="${!article.isFirstPage}"><a th:href="${#httpServletRequest.requestURI}+'?pageNum='+${article.prePage}">上一页</a></li>
+                        <li class="active"><a href="#" disabled="" th:text="${article.pageNum+'/'+article.pages}"></a></li>
+                        <li th:if="${!article.isLastPage}"><a th:href="${#httpServletRequest.requestURI}+'?pageNum='+${article.nextPage}">下一页</a></li>
+                        <li th:if="${!article.isLastPage}"><a th:href="${#httpServletRequest.requestURI}+'?pageNum='+${article.lastPage}">尾页</a></li>
+                        <li></li>
+                    </ul>
+                    <ul class="pagination" th:if="${search!=null}">
+                        <li></li>
+                        <li th:if="${!article.isFirstPage}"><a th:href="${#httpServletRequest.requestURI}+'?pageNum='+${article.firstPage+'&title='+search}">首页</a></li>
+                        <li th:if="${!article.isFirstPage}"><a th:href="${#httpServletRequest.requestURI}+'?pageNum='+${article.prePage}+'&title='+${search}">上一页</a></li>
+                        <li class="active"><a href="#" disabled="" th:text="${article.pageNum+'/'+article.pages}"></a></li>
+                        <li th:if="${!article.isLastPage}"><a th:href="${#httpServletRequest.requestURI}+'?pageNum='+${article.nextPage}+'&title='+${search}">下一页</a></li>
+                        <li th:if="${!article.isLastPage}"><a th:href="${#httpServletRequest.requestURI}+'?pageNum='+${article.lastPage+'&title='+search}">尾页</a></li>
+                        <li></li>
+                    </ul>
+                </div>
+                <div class="col-sm-12" th:if="${article.total==0}">
+                    <div class="clients text-center wow fadeInUp animated" data-wow-duration="500ms" data-wow-delay="300ms" style="visibility: visible; animation-duration: 500ms; animation-delay: 300ms; animation-name: fadeInUp;">
+                        <h1 class="title">这儿还没有数据</h1>
+                        <p>嘻嘻</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="bar::footer"></div>
+    <!--/#footer-->
+</body>
+</html>

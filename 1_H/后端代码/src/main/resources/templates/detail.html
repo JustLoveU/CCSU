@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ch"  xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title th:text="${article.title}"></title>
+    <script th:src="@{/webjars/jquery/3.3.1/jquery.min.js}"></script>
+    <link rel="stylesheet"  href="/webjars/editor.md/1.5.0/css/editormd.min.css" th:href="@{/webjars/editor.md/1.5.0/css/editormd.min.css}">
+    <script th:src="@{/webjars/editor.md/1.5.0/editormd.min.js}"></script>
+    <div th:replace="bar::css-js"></div>
+</head><!--/head-->
+<body>
+<div th:replace="bar::header"></div>
+<!--/#header-->
+<section id="page-breadcrumb">
+    <div class="vertical-center sun">
+        <div class="container">
+            <div class="row">
+                <div class="action">
+                    <div class="col-sm-12">
+                        <h1 class="title" th:text="${article.title}">Blog Details</h1>
+                        <p style="font-size: small" th:text="'发布时间：'+${#dates.format(article.data,'yyyy-MM-dd HH:mm:ss')}+'    访问量：'+${article.view}"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<div class="container">
+    <div id="testimonial-container">
+            <textarea style="display:none;" th:text="${article.content}">内容丢失了</textarea>
+    </div>
+</div>
+
+<div th:replace="bar::footer"></div>
+<!--/#footer-->
+
+
+
+<script src="/webjars/editor.md/1.5.0/lib/flowchart.min.js" th:src="@{/webjars/editor.md/1.5.0/lib/flowchart.min.js}"></script>
+<script src="/webjars/editor.md/1.5.0/lib/jquery.flowchart.min.js" th:src="@{/webjars/editor.md/1.5.0/lib/jquery.flowchart.min.js}"></script>
+<script src="/webjars/editor.md/1.5.0/lib/marked.min.js" th:src="@{/webjars/editor.md/1.5.0/lib/marked.min.js}"></script>
+<script src="/webjars/editor.md/1.5.0/lib/prettify.min.js" th:src="@{/webjars/editor.md/1.5.0/lib/prettify.min.js}"></script>
+<script src="/webjars/editor.md/1.5.0/lib/raphael.min.js" th:src="@{/webjars/editor.md/1.5.0/lib/raphael.min.js}"></script>
+<script src="/webjars/editor.md/1.5.0/lib/sequence-diagram.min.js" th:src="@{/webjars/editor.md/1.5.0/lib/sequence-diagram.min.js}"></script>
+<script src="/webjars/editor.md/1.5.0/lib/underscore.min.js" th:src="@{/webjars/editor.md/1.5.0/lib/underscore.min.js}"></script>
+<script type="text/javascript">
+
+
+    $(function() {
+        var testEditormdView;
+        testEditormdView = editormd.markdownToHTML("testimonial-container", {
+            htmlDecode      : "style,script,iframe",  // you can filter tags decode
+            emoji           : true,
+            taskList        : true,
+            tex             : true,  // 默认不解析
+            flowChart       : true,  // 默认不解析
+            sequenceDiagram : true,  // 默认不解析
+            tocm            : true,
+            // tocContainer    : "#custom-toc-container",
+            path            : '/webjars/editor.md/1.5.0/lib/'
+        });
+    });
+</script>
+</body>
+</html>

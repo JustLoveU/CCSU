@@ -1,0 +1,1 @@
+page{background-color:#f7f7f7}.card{margin:15rpx;border-radius:12px}button::after{border:none}button{background-color:#fff}.camera{width:54px;height:44px}.camera:active{background-color:#ededed}.user-box{background-color:#fff}

@@ -1,0 +1,21 @@
+@charset "utf-8";
+*{box-sizing: border-box;}
+body,html{height: 100%; overflow: hidden; background: linear-gradient(to right bottom,#FFFFFF,#00bfb0);}
+body{display: flex; justify-content: center; align-items: center;}
+.logo{display: block; width: 225px; margin: 0 auto;}
+.download{padding: 30px 0 50px 0;}
+.android {display: block; width: 171px; height: 43px; background: #fff url(../img/download-android2.png) no-repeat center; background-size: 123px auto; border-radius: 999px; margin: 10px;}
+.android{background-image: url(../img/download-android2.png);}
+.ios{display: block; width: 171px; height: 43px; background: #fff url(../img/download-ios2.png) no-repeat center; background-size: 123px auto; border-radius: 999px; margin: 10px;}
+.bottom-img{width:90%; margin: auto; position: relative;}
+.bottom-img .bg,.bottom-img .phone{width: 100%;}
+.bottom-img .phone{position: absolute; z-index: 1; left: 0; top:0; animation: phoneAni 1s linear infinite alternate;}
+@keyframes phoneAni{
+	100%{
+		top: 10px;
+	}
+}
+.open-tips{position: fixed; z-index:9; left: 0; right: 0; top:0; bottom: 0; background: rgba(0,0,0,.8); overflow: hidden; display: none;}
+.open-tips img{width: 300px; float: right; margin-right: 20px;}
+
+.url{display: block; width: 171px; height: 43px; background: #fff ; background-size: 123px auto; border-radius: 999px; margin: 10px;color:#00bfb0;line-height:40px;font-weight:1000}

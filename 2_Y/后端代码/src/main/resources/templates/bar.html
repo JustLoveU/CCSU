@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ch" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <!-- 强制Chromium内核，作用于360浏览器、QQ浏览器等国产双核浏览器 -->
+    <meta name="renderer" content="webkit"/>
+
+    <!-- 强制Chromium内核，作用于其他双核浏览器 -->
+    <meta name="force-rendering" content="webkit"/>
+
+    <!-- 如果有安装 Google Chrome Frame 插件则强制为Chromium内核，否则强制本机支持的最高版本IE内核，作用于IE浏览器 -->
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1"/>
+
+</head>
+<body>
+<div th:fragment="css">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <!-- Custom-Files -->
+    <link rel="stylesheet" th:href="@{/css/bootstrap.css}">
+    <!-- Bootstrap-Core-CSS -->
+    <link th:href="@{/css/blog.css}" type="text/css" rel="stylesheet" media="all">
+    <link rel="stylesheet" th:href="@{/css/style.css}" type="text/css" media="all" />
+    <!-- Style-CSS -->
+    <link th:href="@{/css/font-awesome.min.css}" rel="stylesheet">
+    <!-- Font-Awesome-Icons-CSS -->
+    <!-- //Custom-Files -->
+</div>
+
+
+
+
+<!-- header -->
+<header th:fragment="header">
+    <div class="container-fluid">
+        <div class="header d-md-flex justify-content-between align-items-center py-3 px-xl-5 px-lg-3 px-2">
+            <!-- logo -->
+            <div id="logo">
+                <p><a class="" th:href="@{/}" style="font-size: 24px;"><img th:src="@{/images/logo.jpg}" style="HEIGHT: 60px;">| 乡村振兴研究院</a></p>
+            </div>
+            <!-- //logo -->
+
+            <!-- nav -->
+            <div class="nav_w3ls">
+                <nav>
+                    <label for="drop" class="toggle">Menu</label>
+                    <input type="checkbox" id="drop" />
+                    <ul class="menu">
+                        <li><a th:href="@{/}">首页</a></li>
+                        <li class=" mx-md-3 my-md-0 my-2">
+                            <!-- First Tier Drop Down -->
+                            <label for="drop-1" class="toggle toogle-2">机构概况 <span class="fa fa-angle-down" aria-hidden="true"></span>
+                            </label>
+                            <a th:href="@{#}">机构概况 <span class="fa fa-angle-down" aria-hidden="true"></span></a>
+                            <input type="checkbox" id="drop-1" />
+                            <ul style="left:70px;">
+                                <li><a th:href="@{/nav?nav=1}" class="drop-text">机构简介</a></li>
+                                <li><a th:href="@{/nav?nav=2}" class="drop-text">联系方式</a></li>
+                            </ul>
+                        </li>
+                        <li class="mx-md-3 my-md-0 my-2">
+                            <!-- First Tier Drop Down -->
+                            <label for="drop-2" class="toggle toogle-2">新闻动态 <span class="fa fa-angle-down" aria-hidden="true"></span>
+                            </label>
+                            <a th:href="@{#}">新闻动态 <span class="fa fa-angle-down" aria-hidden="true"></span></a>
+                            <input type="checkbox" id="drop-2" />
+                            <ul style="left:200px;">
+                                <li><a th:href="@{/nav?nav=3}" class="drop-text">工作动态</a></li>
+                                <li><a th:href="@{/nav?nav=4}" class="drop-text">通知公告</a></li>
+                            </ul>
+                        </li>
+                        <li><a th:href="@{/nav?nav=5}">学术活动</a></li>
+                        <li class="mx-md-3 my-md-0 my-2">
+                            <!-- First Tier Drop Down -->
+                            <label for="drop-3" class="toggle toogle-2">科研&服务 <span class="fa fa-angle-down" aria-hidden="true"></span>
+                            </label>
+                            <a th:href="@{#}">科研&服务 <span class="fa fa-angle-down" aria-hidden="true"></span></a>
+                            <input type="checkbox" id="drop-3" />
+                            <ul style="left:420px;">
+                                <li><a th:href="@{/nav?nav=6}" class="drop-text">科研项目</a></li>
+                                <li><a th:href="@{/nav?nav=7}" class="drop-text">社会服务</a></li>
+                            </ul>
+                        </li>
+                        <li><a th:href="@{/nav?nav=8}">平台建设</a></li>
+                        <!-- <li><a th:href="@{http://www.ccsu.cn/}"  target="_blank">学校首页</a></li>
+                        <li><a th:href="@{/index.html}" target="_blank">后台管理</a></li> -->
+                        <li class="mx-md-3 my-md-0 my-2">
+                            <form role="form" th:action="@{/search}" method="get">
+                                <input type="text" style="display: block;
+									width: 100%;
+									padding: 0.275rem 0.25rem;
+									font-size: 1rem;
+									line-height: 1.5;
+									color: #495057;
+									background-color: #fff;
+									background-clip: padding-box;
+									border: 1px solid #ced4da;
+									border-radius: 0.25rem;
+									transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;"  name="title" autocomplete="off"  placeholder="Search"/>
+                            </form>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+            <!-- //nav -->
+        </div>
+    </div>
+    <div class="stickWrap"></div>
+</header>
+<!-- //header -->
+
+
+
+
+<!-- footer -->
+<footer class="py-5" th:fragment="footer">
+
+    <div class="container py-xl-4">
+        <h2 class="footer-title text-uppercase text-wh mb-lg-4 mb-3"><img th:src="@{/images/link.png}"> 链接</h2>
+        <div class="row footer-top">
+            <div class="col-md-12 footer-grid_section_1its">
+                <div class="row">
+                    <div class="col-md-3 mb-3" th:each="item:${friend}">
+                        <a th:href="${item.url}" target="_blank" style="color: #ffffff;" th:text="${item.name}">长沙学院</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="container py-xl-4">
+        <div class="row footer-top">
+            <div class="col-md-5 footer-grid_section_1its">
+                <div class="row">
+                    <img th:src="@{/images/f_text.png}">
+                </div>
+
+            </div>
+            <div class="col-md-7 footer-grid_section_1its my-md-0 my-5">
+                <p style="color: #ffffff;" th:utext="${other1.content}">Copyright &copy; 2020.Company name All rights reserved.乡村振兴研究院</p>
+            </div>
+
+
+        </div>
+    </div>
+</footer>
+<!-- //footer -->
+<div th:fragment="top">
+    <a href="#home" class="move-top text-center"></a>
+</div>
+
+</body>
+</html>

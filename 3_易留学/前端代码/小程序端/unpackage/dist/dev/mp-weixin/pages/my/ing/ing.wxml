@@ -1,0 +1,1 @@
+<view><view style="padding:30rpx;"><u-steps vue-id="828e914a-1" list="{{numList}}" current="{{4}}" direction="column" mode="number" bind:__l="__l"></u-steps></view></view>

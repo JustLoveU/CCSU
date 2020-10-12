@@ -1,0 +1,11 @@
+{
+  "navigationBarTitleText": "易留学",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "u-navbar": "/node-modules/uview-ui/components/u-navbar/u-navbar",
+    "u-image": "/node-modules/uview-ui/components/u-image/u-image",
+    "u-search": "/node-modules/uview-ui/components/u-search/u-search",
+    "u-row": "/node-modules/uview-ui/components/u-row/u-row",
+    "u-col": "/node-modules/uview-ui/components/u-col/u-col"
+  }
+}

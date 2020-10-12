@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html  xmlns:th="http://www.thymeleaf.org">
+	<head>
+		<title>超级计算与云计算研究所 </title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" th:href="@{/assets/css/main.css}" />
+		<!--[if lte IE 9]><link rel="stylesheet" href="assets/css/ie9.css" /><![endif]-->
+		<noscript><link rel="stylesheet" th:href="@{assets/css/noscript.css}" /></noscript>
+	</head>
+	<body>
+
+		<!-- Wrapper -->
+			<div id="wrapper">
+
+				<!-- Header -->
+					<header id="header">
+						<div class="content" style="
+    border-top-width: 0px;
+    border-bottom-width: 0px;">
+							<div class="inner">
+								<h1>欢迎访问 </h1>
+								<p style="font-size: 30px;font-family: cursive;margin: 0 0 1rem 0;">超级计算与云计算研究所</p>
+								<p style="font-size: 30px;font-family: cursive;margin: 0 0 1rem 0;">教育部高效能计算学科创新引智基地</p>
+								<p style="font-size: 30px;font-family: cursive;margin: 0 0 1rem 0;">高性能计算应用软件教育部工程中心</p>
+								<p style="font-size: 30px;font-family: cursive;margin: 0 0 1rem 0;">数据分析湖南省工程技术研究中心</p>
+							</div>
+						</div>
+						<nav>
+							<ul>
+								<li><a th:href="@{/index}">进入首页</a></li>
+								<!--<li><a href="#elements">Elements</a></li>-->
+							</ul>
+						</nav>
+					</header>
+
+
+				<!-- Footer -->
+					<footer id="footer">
+						<p class="copyright" th:utext="${other1.content}"></p>
+					</footer>
+
+			</div>
+
+		<!-- BG -->
+			<div id="bg"></div>
+
+		<!-- Scripts -->
+			<script th:src="@{/assets/js/jquery.min.js}"></script>
+			<script th:src="@{/assets/js/skel.min.js}"></script>
+			<script th:src="@{/assets/js/util.js}"></script>
+			<script th:src="@{/assets/js/main.js}"></script>
+
+	</body>
+</html>
