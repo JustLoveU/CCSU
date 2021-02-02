@@ -1,0 +1,10 @@
+{
+  "navigationBarTitleText": "智能DIY结果",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "u-navbar": "/node-modules/uview-ui/components/u-navbar/u-navbar",
+    "u-divider": "/node-modules/uview-ui/components/u-divider/u-divider",
+    "u-rate": "/node-modules/uview-ui/components/u-rate/u-rate",
+    "u-tag": "/node-modules/uview-ui/components/u-tag/u-tag"
+  }
+}

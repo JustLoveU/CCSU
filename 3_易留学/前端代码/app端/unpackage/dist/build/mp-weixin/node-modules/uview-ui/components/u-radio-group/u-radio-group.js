@@ -1,0 +1,10 @@
+(global["webpackJsonp"]=global["webpackJsonp"]||[]).push([["node-modules/uview-ui/components/u-radio-group/u-radio-group"],{"1aaa":function(t,e,u){"use strict";var n,a=function(){var t=this,e=t.$createElement;t._self._c},i=[];u.d(e,"b",(function(){return a})),u.d(e,"c",(function(){return i})),u.d(e,"a",(function(){return n}))},"24f5":function(t,e,u){"use strict";u.r(e);var n=u("1aaa"),a=u("a98c");for(var i in a)"default"!==i&&function(t){u.d(e,t,(function(){return a[t]}))}(i);u("3af2");var r,o=u("f0c5"),f=Object(o["a"])(a["default"],n["b"],n["c"],!1,null,"88ab99e6",null,!1,n["a"],r);e["default"]=f.exports},"3af2":function(t,e,u){"use strict";var n=u("c921"),a=u.n(n);a.a},a98c:function(t,e,u){"use strict";u.r(e);var n=u("f66d"),a=u.n(n);for(var i in n)"default"!==i&&function(t){u.d(e,t,(function(){return n[t]}))}(i);e["default"]=a.a},c921:function(t,e,u){},f66d:function(t,e,u){"use strict";Object.defineProperty(e,"__esModule",{value:!0}),e.default=void 0;var n=a(u("680d"));function a(t){return t&&t.__esModule?t:{default:t}}var i={name:"u-radio-group",mixins:[n.default],props:{disabled:{type:Boolean,default:!1},value:{type:[String,Number],default:""},activeColor:{type:String,default:"#2979ff"},size:{type:[String,Number],default:34},width:{type:String,default:"auto"},wrap:{type:Boolean,default:!1}},provide:function(){return{radioGroup:this}},methods:{setValue:function(t){this.$emit("input",t),this.$nextTick((function(){this.$emit("change",this.value),this.dispatch("u-form-item","on-form-change",this.value)}))}}};e.default=i}}]);
+;(global["webpackJsonp"] = global["webpackJsonp"] || []).push([
+    'node-modules/uview-ui/components/u-radio-group/u-radio-group-create-component',
+    {
+        'node-modules/uview-ui/components/u-radio-group/u-radio-group-create-component':(function(module, exports, __webpack_require__){
+            __webpack_require__('543d')['createComponent'](__webpack_require__("24f5"))
+        })
+    },
+    [['node-modules/uview-ui/components/u-radio-group/u-radio-group-create-component']]
+]);

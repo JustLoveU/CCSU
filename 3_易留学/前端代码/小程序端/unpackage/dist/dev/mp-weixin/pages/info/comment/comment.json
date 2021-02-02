@@ -1,0 +1,18 @@
+{
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "u-navbar": "/node-modules/uview-ui/components/u-navbar/u-navbar",
+    "u-icon": "/node-modules/uview-ui/components/u-icon/u-icon",
+    "u-rate": "/node-modules/uview-ui/components/u-rate/u-rate",
+    "u-divider": "/node-modules/uview-ui/components/u-divider/u-divider",
+    "u-grid": "/node-modules/uview-ui/components/u-grid/u-grid",
+    "u-grid-item": "/node-modules/uview-ui/components/u-grid-item/u-grid-item",
+    "u-image": "/node-modules/uview-ui/components/u-image/u-image",
+    "u-row": "/node-modules/uview-ui/components/u-row/u-row",
+    "u-col": "/node-modules/uview-ui/components/u-col/u-col",
+    "u-line": "/node-modules/uview-ui/components/u-line/u-line",
+    "u-loadmore": "/node-modules/uview-ui/components/u-loadmore/u-loadmore",
+    "u-modal": "/node-modules/uview-ui/components/u-modal/u-modal",
+    "u-input": "/node-modules/uview-ui/components/u-input/u-input"
+  }
+}

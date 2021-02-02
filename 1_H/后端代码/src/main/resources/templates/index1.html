@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ch"  xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>超级计算与云计算研究所</title>
+    <div th:replace="bar::css-js"></div>
+</head><!--/head-->
+<body>
+	<div th:replace="bar::header"></div>
+    <!--/#header-->
+
+    <div class="container">
+        <div class="col-md-9 col-sm-8">
+            <div id="carousel-container">
+                    <div id="carousel-example-generic" class="carousel slide" data-ride="carousel">
+                        <div class="carousel-inner">
+                            <div class="item" th:each="item,itemstatus:${inner}" th:class="${itemstatus.last?' item active':'item'}" th:alt="${item.title}">
+                                <a th:href="${item.url}==null?@{/article/}+${item.id}:${item.url}" target="_blank">
+                                    <img th:src="${item.img}"  style="width: 100%;height: 400px" th:title="${item.title}">
+        <!--                            <div class="carousel-caption" style="bottom: 150px">-->
+        <!--                                <h3  th:text="${item.title}"></h3>-->
+        <!--                            </div>-->
+                                </a>
+                            </div>
+                        </div>
+                        <a class="left carousel-control hidden-xs" href="#carousel-example-generic" data-slide="prev">
+                            <span class="glyphicon glyphicon-chevron-left"></span>
+                        </a>
+                        <a class="right carousel-control hidden-xs" href="#carousel-example-generic" data-slide="next">
+                            <span class="glyphicon glyphicon-chevron-right"></span>
+                        </a>
+                    </div><!--/#carousel-example-generic-->
+        </div>
+            <div id="testimonial-container">
+        <!--             style="    box-shadow: 0 -6px 24px rgba(10, 10, 10,0.09);-->
+        <!--    -moz-box-shadow: 0 -6px 24px rgba(10, 10, 10,0.09);-->
+        <!--    -webkit-box-shadow: 0 -6px 24px rgba(10, 10, 10,0.09);-->
+        <!--    background-color: #ffffff;-->
+        <!--    border-radius: 3px 3px;-->
+        <!--    -moz-border-radius: 3px 3px;-->
+        <!--    -webkit-border-radius: 3px 3px;-->
+        <!--    /* padding-top: 50px; */-->
+        <!--    top: -50px;-->
+        <!--    /* z-index: 80; */-->
+        <!--    padding: 20px;-->
+        <!--    position: relative;"-->
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h2 class="page-header"><img th:src="@{/images/icon-3.png}">新闻动态<a href="/nav/1/6"><span style="float: right;font-size: small">more ></span></a></h2>
+                    <div th:each="item:${article1}">
+                        <a th:href="${item.url}==null?@{/article/}+${item.id}:${item.url}" target="_blank"  th:title="${item.title}">
+                        <div class="col-md-9">
+                            <p style="white-space: nowrap;overflow: hidden;text-overflow: ellipsis;width: 99%;" th:text="${item.title}"></p>
+                        </div>
+                        <div class="col-md-3" style="font-size: small" th:text="${#dates.format(item.data,'yyyy-MM-dd')}"></div>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <h2 class="page-header"><img th:src="@{/images/icon-4.png}">通知公告 <a href="/nav/1/7"><span style="float: right;font-size: small">more ></span></a></h2>
+                    <div th:each="item:${article2}">
+                        <a th:href="${item.url}==null?@{/article/}+${item.id}:${item.url}" target="_blank"  th:title="${item.title}">
+                            <div class="col-md-9">
+                                <p style="white-space: nowrap;overflow: hidden;text-overflow: ellipsis;width: 99%;" th:text="${item.title}"></p>
+                            </div>
+                            <div class="col-md-3" style="font-size: small" th:text="${#dates.format(item.data,'yyyy-MM-dd')}"></div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+            <section id="team">
+            <div class="row">
+                    <h1 class="title text-center wow fadeInDown animated" data-wow-duration="500ms" data-wow-delay="300ms" style="visibility: visible; animation-duration: 500ms; animation-delay: 300ms; animation-name: fadeInDown;">Meet the Team</h1>
+                    <p class="text-center wow fadeInDown animated" data-wow-duration="400ms" data-wow-delay="400ms" style="visibility: visible; animation-duration: 400ms; animation-delay: 400ms; animation-name: fadeInDown;">
+                        西安电子科技大学“智能感知与图像理解”实验室在“九五﹒211”、“十五﹒211”和“十一五﹒211”工程的支持下，由小到大，得到了健康的成长。
+                        1991年成立了智能信号处理与识别研究小组，同年成立了国内第一个神经网络研究中心。1993年承办了全国神经网络大会。2002年，在保铮教授提议和大力支持下，利用已有的基础，将研究方向作进一步拓广，经学校批准成立了智能信息处理研究所和教育部留学回国人员实验室。
+                    </p>
+                    <div id="team-carousel" class="carousel slide wow fadeIn animated" data-ride="carousel" data-wow-duration="400ms" data-wow-delay="400ms" style="visibility: visible; animation-duration: 400ms; animation-delay: 400ms; animation-name: fadeIn;">
+                        <!-- Indicators -->
+                        <ol class="carousel-indicators visible-xs">
+                            <li data-target="#team-carousel" data-slide-to="0" class=""></li>
+                            <li data-target="#team-carousel" data-slide-to="1" class="active"></li>
+                        </ol>
+                        <!-- Wrapper for slides -->
+                        <div class="carousel-inner">
+                            <div class="item">
+                                <div class="col-sm-2 col-xs-6"th:each="item,statu:${profile}" th:if="${statu.index<6}">
+                                    <div class="team-single-wrapper" >
+                                        <div class="team-single">
+                                            <div class="person-thumb">
+                                                <a th:href="@{/profile/}+${item.profileId}">
+                                                <img src="img/zhuyulin.jpg" th:src="${item.profilePicpath}" style="height: 160px" class="img-responsive" th:alt="${item.profileCnname}">
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="person-info">
+                                            <h2 th:text="${item.profileCnname}"></h2>
+                                            <p  th:text="${item.profilePosition}"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="item active">
+                                <div class="col-sm-2 col-xs-6"th:each="item,statu:${profile}"th:if="${statu.index>=6}" >
+                                    <div class="team-single-wrapper" >
+                                        <div class="team-single">
+                                            <div class="person-thumb">
+                                                <a th:href="@{/profile/}+${item.profileId}">
+                                                <img src="img/zhuyulin.jpg" th:src="${item.profilePicpath}" style="height: 160px" class="img-responsive" th:alt="${item.profileCnname}">
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="person-info">
+                                            <h2 th:text="${item.profileCnname}"></h2>
+                                            <p  th:text="${item.profilePosition}"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Controls -->
+                        <a class="left team-carousel-control hidden-xs" href="#team-carousel" data-slide="prev">left</a>
+                        <a class="right team-carousel-control hidden-xs" href="#team-carousel" data-slide="next">right</a>
+                    </div>
+            </div>
+        </section>
+        </div>
+        <div class="col-md-3 col-sm-4">
+
+        <div class="sidebar portfolio-sidebar">
+            <div class="sidebar-item">
+                <h3>创始人</h3>
+                <div class="col-md-12">
+                    <div class="col-sm-12 text-center">
+                        <a th:href="@{/profile/2}">
+                            <img th:src="@{/images/likenli.png}" style="height: 200px;" class="margin-bottom" alt="">
+                            <h1 class="margin-bottom">李肯立</h1>
+                            <p>李肯立，信息科学与工程学院院长，国家超算长沙中心主任，教育部长江学者特聘教授、国家杰出青年科学基金获得者、中组部万人计划科技创新领军人才、科技部创新人才推进计划入选者。</p>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="col-sm-12 text-center">
+                        <a th:href="@{/profile/1}">
+                            <img th:src="@{/images/likeqin.jpg}" style="height: 200px;" class="margin-bottom" alt="">
+                            <h1 class="margin-bottom">李克勤</h1>
+                            <p>李克勤，IEEE Fellow、湖南大学信息科学与工程学院教授（岳麓学者领军岗）、博士生导师、院学术委员会主席、超级计算与云计算研究所所长。</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <div th:replace="bar::footer"></div>
+    <!--/#footer-->
+
+
+</body>
+</html>

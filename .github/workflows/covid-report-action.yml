@@ -1,0 +1,30 @@
+name: 'tl-covid-report-action'
+
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: 'Person to greet'
+        required: true
+        default: 'Entry CCSU ID'
+      home:
+        description: 'Location'
+        required: false
+        default: 'Changsha City'
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  bot:
+    runs-on: ubuntu-latest
+    environment:
+        name: gh-ubuntulatest
+    steps:
+      - name: 'Get TL Detail'
+        run: curl -XPOST -d "${{ secrets.COVID_REPORT_TL_GETQUERY }}" ${{ secrets.COVID_REPORT_URL }}getDetail
+      - name: 'Submit TL Report'
+        run: curl -XPOST -d "${{ secrets.COVID_REPORT_TL_SUBMITQUERY }}" ${{ secrets.COVID_REPORT_URL }}doDetail
+      - name: 'Get YF Detail'
+        run: curl -XPOST -d "${{ secrets.COVID_REPORT_YF_GETQUERY }}" ${{ secrets.COVID_REPORT_URL }}getDetail
+      - name: 'Submit YF Report'
+        run: curl -XPOST -d "${{ secrets.COVID_REPORT_YF_SUBMITQUERY }}" ${{ secrets.COVID_REPORT_URL }}doDetail

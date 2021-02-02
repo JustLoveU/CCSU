@@ -1,0 +1,28 @@
+
+server:
+  port: 8081
+
+# mysql
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    #MySQL����
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/website_university_admin?characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+    username: lomtom
+    password: qwer1234
+
+
+
+  jackson:
+    time-zone: GMT+8
+    date-format: yyyy-MM-dd HH:mm:ss
+  resources:
+    static-locations: classpath:/static/,classpath:/views/
+
+mybatis-plus:
+  mapperLocations: classpath:mapper/**/*.xml
+
+logging:
+  level:
+    com.lomtom: debug
