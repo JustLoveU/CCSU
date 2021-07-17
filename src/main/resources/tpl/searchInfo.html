@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en" style="background: #f0f0f0">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <base href="/">
+    <link href="element/element.min.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 10px;
+        }
+
+        .padding-top-l {
+            padding-top: 20px;
+        }
+
+        .grid-content {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
+            align-items: center;
+            height: 100px;
+        }
+
+        .grid-cont-right {
+            -webkit-box-flex: 1;
+            -ms-flex: 1;
+            flex: 1;
+            text-align: center;
+            font-size: 14px;
+            color: #999;
+        }
+
+        .grid-con-icon {
+            font-size: 50px;
+            width: 100px;
+            height: 100px;
+            text-align: center;
+            line-height: 100px;
+            color: #fff;
+        }
+
+        .grid-num {
+            font-size: 30px;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app" style="padding-top: 20px;padding-left: 15px;padding-right: 15px">
+    <template>
+        <el-row :gutter="20">
+            <el-col :span="8">
+                <el-card shadow="hover" :body-style="{ padding: '0px' }">
+                    <div class="grid-content">
+                        <i class="el-icon-data-line grid-con-icon" style="background: #2d8cf0"></i>
+                        <div class="grid-cont-right">
+                            <div class="grid-num">{{countEs}}</div>
+                            <div>ES 总数</div>
+                        </div>
+                    </div>
+                </el-card>
+            </el-col>
+            <el-col :span="8">
+                <el-card shadow="hover" :body-style="{ padding: '0px' }">
+                    <div class="grid-content">
+                        <i class="el-icon-data-analysis grid-con-icon" style="background: #64d572;"></i>
+                        <div class="grid-cont-right">
+                            <div class="grid-num">{{countMysql}}</div>
+                            <div>MySQL 总数</div>
+                        </div>
+                    </div>
+                </el-card>
+            </el-col>
+            <el-col :span="8">
+                <el-card shadow="hover" :body-style="{ padding: '0px' }">
+                    <div class="grid-content">
+                        <i class="el-icon-s-goods grid-con-icon" style="background: #f25e43;"></i>
+                        <div class="grid-cont-right">
+                            <div class="grid-num">5000</div>
+                            <div>数量</div>
+                        </div>
+                    </div>
+                </el-card>
+            </el-col>
+        </el-row>
+        <el-row :gutter="20" class="padding-top-l">
+            <el-col :span="12">
+                <el-card class="box-card">
+                    <div slot="header" class="clearfix">
+                        <el-input
+                                placeholder="请输入内容"
+                                v-model="keywords"
+                                style="width: 280px"
+                                @change="getList">
+                            <i slot="prefix" class="el-input__icon el-icon-search"></i>
+                        </el-input>
+                        <span style="float: right;">搜索引擎</span>
+                    </div>
+                    <el-table
+                            :data="datalist"
+                            style="width: 100%">
+                        <el-table-column
+                                prop="content.title"
+                                label="标题"
+                                width="380">
+                        </el-table-column>
+                        <el-table-column
+                                prop="content.view"
+                                label="访问量"
+                                width="80">
+                        </el-table-column>
+                        <el-table-column
+                                prop="content.source"
+                                label="来源"
+                                width="80">
+                        </el-table-column>
+                        <el-table-column
+                                prop="content.time"
+                                label="时间">
+                        </el-table-column>
+                    </el-table>
+                    <div style="padding: 14px;">
+                        <el-pagination
+                                @size-change="changeSize"
+                                @current-change="changePage"
+                                :current-page="page"
+                                :page-sizes="[10, 15, 20, 50]"
+                                :page-size="10"
+                                layout="total, sizes, prev, pager, next, jumper"
+                                :total="countEs">
+                        </el-pagination>
+                    </div>
+                </el-card>
+            </el-col>
+
+            <el-col :span="12">
+                <el-card class="box-card">
+                    <div slot="header" class="clearfix">
+                        <el-button type="text" @click="create">索引重构</el-button>
+                        <el-button type="text" @click="importAll">数据对齐</el-button>
+                        <span style="float: right;">搜索引擎</span>
+                    </div>
+                    <el-table
+                            :data="list"
+                            style="width: 100%">
+                        <el-table-column
+                                prop="apiName"
+                                label="操作"
+                                width="180">
+                        </el-table-column>
+                        <el-table-column
+                                prop="createTime"
+                                label="时间"
+                                width="180">
+                        </el-table-column>
+                        <el-table-column
+                                prop="ip"
+                                label="ip">
+                        </el-table-column>
+                        <el-table-column
+                                prop="infoId"
+                                label="资讯编号">
+                        </el-table-column>
+                    </el-table>
+                </el-card>
+            </el-col>
+        </el-row>
+    </template>
+</div>
+<script src="element/vue.min.js"></script>
+<script src="element/element.min.js"></script>
+<script src="element/axios.min.js"></script>
+<script>
+    var vue = new Vue({
+        el: '#app',
+        data() {
+            return {
+                countEs: "",
+                countMysql: "",
+                list: [],
+                page: 1,
+                limit: 10,
+                datalist :[],
+                keywords: ''
+            };
+        },
+        mounted() {
+            this.getIndex()
+            this.getList()
+        },
+        methods: {
+            getIndex() {
+                axios.get("/erupt-api/es/info/index", {}).then((res) => {
+                    this.countEs = res.data.countEs;
+                    this.countMysql = res.data.countMysql;
+                    this.list = res.data.list
+                })
+            },
+            create() {
+                this.$confirm('重构将要清除以往所有数据，是否重构索引?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    axios.get("/erupt-api/es/info/create", {}).then((res) => {
+                        this.$message({
+                            type: 'success',
+                            message: '重构成功!'
+                        });
+                    })
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消重构'
+                    });
+                });
+            },
+            importAll() {
+                this.$confirm('导入花时间较久， 是否继续导入?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    axios.get("/erupt-api/es/info/importAll", {}).then((res) => {
+                        this.$message({
+                            type: 'success',
+                            message: '导入成功!'
+                        });
+                    })
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消重构'
+                    });
+                });
+            },
+            getList(){
+                var params = {
+                    page: this.page,
+                    limit: this.limit,
+                    searchField: 'title',
+                    keywords: this.keywords
+                }
+                axios.get("/erupt-api/es/info/list", {params}).then((res) => {
+                    this.datalist = res.data.page.list
+                })
+            },
+            changeSize(size){
+                this.limit = size
+                this.page = 1
+                this.getList()
+            },
+            changePage(page){
+                this.page = page
+                this.getList()
+            }
+        }
+    });
+</script>
+</body>
+</html>

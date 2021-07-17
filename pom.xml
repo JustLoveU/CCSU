@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.4.3</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+    <groupId>com.lomtom</groupId>
+    <artifactId>search</artifactId>
+    <version>v2</version>
+    <name>search</name>
+    <packaging>jar</packaging>
+    <description>Demo project for Spring Boot</description>
+
+    <properties>
+        <java.version>1.8</java.version>
+        <erupt.version>1.6.11</erupt.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+        </dependency>
+        <!--用户权限管理-->
+        <dependency>
+            <groupId>xyz.erupt</groupId>
+            <artifactId>erupt-upms</artifactId>
+            <version>${erupt.version}</version>
+        </dependency>
+        <!--接口数据安全-->
+        <dependency>
+            <groupId>xyz.erupt</groupId>
+            <artifactId>erupt-security</artifactId>
+            <version>${erupt.version}</version>
+        </dependency>
+        <!--后台WEB界面-->
+<!--        <dependency>-->
+<!--            <groupId>xyz.erupt</groupId>-->
+<!--            <artifactId>erupt-web</artifactId>-->
+<!--            <version>${erupt.version}</version>-->
+<!--        </dependency>-->
+        <!--服务监控模块-->
+        <dependency>
+            <groupId>xyz.erupt</groupId>
+            <artifactId>erupt-monitor</artifactId>
+            <version>${erupt.version}</version>
+        </dependency>
+        <!-- 自定义页面 -->
+        <dependency>
+            <groupId>xyz.erupt</groupId>
+            <artifactId>erupt-tpl</artifactId>
+            <version>${erupt.version}</version>
+        </dependency>
+        <!-- 定时任务-->
+        <dependency>
+            <groupId>xyz.erupt</groupId>
+            <artifactId>erupt-job</artifactId>
+            <version>${erupt.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>xyz.erupt</groupId>
+            <artifactId>erupt-tpl-ui.element-ui</artifactId>
+            <version>${erupt.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-tomcat</artifactId>
+            <scope>compile</scope>
+        </dependency>
+
+        <!--通用mapper起步依赖-->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-boot-starter</artifactId>
+            <version>3.3.1</version>
+        </dependency>
+        <!--MySQL数据库驱动-->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+        </dependency>
+        <!--动态数据源-->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>dynamic-datasource-spring-boot-starter</artifactId>
+            <version>3.3.1</version>
+        </dependency>
+        <!-- ES-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-elasticsearch</artifactId>
+<!--            <version>4.0.8.RELEASE</version>-->
+        </dependency>
+        <!-- aop-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+        <!--swagger3-->
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-boot-starter</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+        <!--lombok-->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+        <!-- JSR验证-->
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+            <version>2.0.1.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>6.0.18.Final</version>
+            <scope>compile</scope>
+        </dependency>
+        <!--JWT-->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt</artifactId>
+            <version>0.9.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.xpand</groupId>
+            <artifactId>starter-canal</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+        </dependency>
+    </dependencies>
+
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+
+        <!--        https://mulanos.oschina.net/p/erupt  -->
+        <!--        https://mp.weixin.qq.com/s/tddLpT8CwQCFzHU9rKNfZg  -->
+
+
+        <!--        文章管理-->
+        <!--        https://www.erupt.xyz/demo/#/build/table/Article-->
+
+
+        <!--        https://gitee.com/erupt/erupt/blob/master/%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97.md-->

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1,user-scalable=no">
+    <meta charset="UTF-8">
+    <title>APP下载</title>
+    <link href="css/base.css" rel="stylesheet">
+    <link href="css/phone2.css" rel="stylesheet">
+    <!--	https://www.cnblogs.com/youcong/p/10575277.html-->
+    <script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script>
+    <script src="https://pv.sohu.com/cityjson?ie=utf-8"></script>
+    <script type="text/javascript">
+        // console.log('IP地址:' + returnCitySN["cip"] + ', CID:' + returnCitySN["cid"] + ', 地区:' + returnCitySN["cname"]+",浏览器版本:"+getBrowserInfo());
+
+
+        // 后台数据不匹配：https://blog.csdn.net/dongyuguoai/article/details/81206179
+        $.ajaxSetup({
+            contentType: 'application/json'
+        })
+        var json = {
+            ip: returnCitySN["cip"],
+            cid: returnCitySN["cid"],
+            address: returnCitySN["cname"],
+            chrome: getBrowserInfo()[0],
+        }
+        $.ajax({
+            url: "/log",
+            data: JSON.stringify(json),
+            type: 'POST',
+            success: function (data) {
+                console.log(data)
+            }
+        })
+
+        function getBrowserInfo() {
+            var agent = navigator.userAgent.toLowerCase();
+
+            var regStr_ie = /msie [\d.]+;/gi;
+            var regStr_ff = /firefox\/[\d.]+/gi
+            var regStr_chrome = /chrome\/[\d.]+/gi;
+            var regStr_saf = /safari\/[\d.]+/gi;
+
+            //IE
+            if (agent.indexOf("msie") > 0) {
+                return agent.match(regStr_ie);
+            }
+
+            //firefox
+            if (agent.indexOf("firefox") > 0) {
+                return agent.match(regStr_ff);
+            }
+
+            //Chrome
+            if (agent.indexOf("chrome") > 0) {
+                return agent.match(regStr_chrome);
+            }
+
+            //Safari
+            if (agent.indexOf("safari") > 0 && agent.indexOf("chrome") < 0) {
+                return agent.match(regStr_saf);
+            }
+
+        }
+    </script>
+</head>
+<body>
+<div class="open-tips">
+    <img src="img/open-tips.png">
+</div>
+<center>
+    <img class="logo" src="img/logo-vip.png">
+    <div class="download">
+        <span style="padding:10px;margin-top:20px;color:#000000;font-size:16px">易留学客户端：</span>
+        <a class="android" href="https://ou.lomtom.top/YiLiuXue.apk" download="易留学"></a>
+        <a class="url" href="https://offer.lomtom.top" target="_blank">PC网页版</a>
+        <span style="padding:10px;margin-top:20px;color:#000000;font-size:16px">易留学平台：</span>
+        <a class="url" href="https://yang.lomtom.top" target="_blank">平台管理网站</a>
+        <span style="padding:10px;color:#000000;font-size:16px">易留学聊天平台：</span>
+        <a class="url" href="https://chat.lomtom.top" target="_blank">聊天网站</a>
+        <span style="padding:10px;margin-top:20px;color:red;font-size:16px">若长时间未响应，请使用浏览器打开</span>
+    </div>
+    <div class="bottom-img">
+        <img class="phone" src="img/download-img-phone.png">
+        <img class="bg" src="img/download-img.png">
+    </div>
+</center>
+
+<!--
+<script type="text/javascript">
+
+//安卓下载地址 
+var androidUrl = '#';
+//IOS下载地址
+var iosUrl = '#';
+var openTips = document.querySelector('.open-tips');
+var androidBtn = document.querySelector(".download .android");
+var IOSBtn = document.querySelector(".download .ios");
+//显示按钮
+checkos();
+//按钮点击事件
+androidBtn.addEventListener('touchstart',function(){
+	if(isWeChat()){
+		openTips.style.display = 'block';
+	}else{
+		location.href = androidUrl;
+	}
+})
+IOSBtn.addEventListener('touchstart',function(){
+	if(isWeChat()){
+		openTips.style.display = 'block';
+	}else{
+		location.href = iosUrl;
+	}
+})
+
+function checkos(){
+	var u = navigator.userAgent;
+	var isAndroid = u.indexOf('Android') > -1 || u.indexOf('Adr') > -1; //android终端
+	var isiOS = !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/); //ios终端
+	if(isAndroid){
+		IOSBtn.style.display = "none";
+		return;
+	}else if(isiOS){
+		androidBtn.style.display = "none";
+		return;
+	}else{
+		return;
+	}
+}
+
+function isWeChat(){
+	var ua = window.navigator.userAgent.toLowerCase();
+	if(ua.match(/MicroMessenger/i) == 'micromessenger'){
+		return true;
+	}else{
+		return false;
+	}
+}
+</script>-->
+</body>
+</html>

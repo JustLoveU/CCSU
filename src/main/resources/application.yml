@@ -1,0 +1,28 @@
+
+spring:
+  profiles:
+    active: com
+erupt-app:
+  # 登录失败几次，需要验证码
+  verifyCodeCount: 2
+erupt:
+  # 是否开启csrf防御
+  csrfInspect: true
+  # 是否开启redis方式存储session，默认false，开启后需在配置文件中添加redis配置
+  redisSession: true
+  # 附件上传存储路径, 默认路径为：/opt/erupt-attachment
+  #  uploadPath: D:/erupt/attachment
+  # 是否保留上传文件原始名称
+  keepUploadFileName: false
+  # 登录session时长（redisSession为true时有效）
+  upms.expireTimeByLogin: 60
+  # 是否记录操作日志，默认true，该功能开启后可在【系统管理 → 操作日志】中查看操作日志
+  security.recordOperateLog: true
+  #  org.ssssssss
+  jacksonHttpMessageConvertersPackages:
+    - springfox
+    - org.elasticsearch
+    - org.springframework.data.elasticsearch
+server:
+  port: 8888
+
