@@ -1,0 +1,529 @@
+/*! school-square 1.0.0 pub 2018-01-25 11:33 by ellis.s */
+
+#rightFu {
+	margin-left: 620px
+}
+
+.school-square .nav-pic {
+	padding-top: 20px
+}
+
+.school-square .nav-pic ul li {
+	float: left;
+	width: 390px;
+	height: 120px;
+	margin-right: 10px;
+	margin-top: 10px;
+	box-sizing: border-box;
+	background: url(//s2.51offer.com/school/image/2017-03-28/1.png) no-repeat center center;
+	background-size: cover;
+	position: relative
+}
+
+.school-square .nav-pic ul li a {
+	display: block;
+	width: 390px;
+	height: 120px;
+	position: relative;
+	display: table
+}
+
+.school-square .nav-pic ul li a p {
+	width: 100%;
+	color: #fff;
+	font-size: 18px;
+	text-align: center;
+	padding: 0 30px;
+	box-sizing: border-box;
+	letter-spacing: 1px;
+	display: table-cell;
+	vertical-align: middle;
+	text-shadow: 0 0 8px rgba(0, 0, 0, .2)
+}
+
+.school-square .nav-pic ul li .wrap {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 390px;
+	height: 120px;
+	background-color: rgba(0, 0, 0, .3);
+	background-color: #000\9;
+	filter: alpha(opacity=30)
+}
+
+.school-square .nav-pic ul li:hover {
+	box-shadow: 0 0 8px rgba(0, 0, 0, .2)
+}
+
+.school-square .nav-pic ul li.margin1,
+.school-square .nav-pic ul li.margin4 {
+	margin-left: 5px
+}
+
+.school-square .nav-pic ul li.margin3,
+.school-square .nav-pic ul li.margin6 {
+	margin-right: 5px
+}
+
+.school-square .square {
+	margin-top: 20px
+}
+
+.school-square .square ul.select {
+	color: #333
+}
+
+.school-square .square ul.select li.select-result dl {
+	height: 60px
+}
+
+.school-square .square ul.select li.select-result dl dt {
+	float: left;
+	font-size: 28px;
+	color: #333;
+	padding: 15px 0
+}
+
+.school-square .square ul.select li.select-result dl dd {
+	float: left;
+	color: #999;
+	font-size: 18px;
+	margin-top: 13px;
+	padding: 3px 15px
+}
+
+.school-square .square ul.select li.select-result dl dd.arrowright {
+	font-family: SimSun
+}
+
+.school-square .square ul.select li.select-result dl dd.addStyle {
+	padding: 3px 35px 3px 4px;
+	font-size: 16px;
+	border: 1px solid #e0e0e0;
+	color: #999;
+	cursor: pointer;
+	position: relative
+}
+
+.school-square .square ul.select li.select-result dl dd.addStyle i {
+	color: #ff7c00
+}
+
+.school-square .square ul.select li.select-result dl dd.addStyle .close {
+	width: 30px;
+	height: 30px;
+	position: absolute;
+	right: 0;
+	top: 0;
+	background: url(//s2.51offer.com/school/image/2017-03-28/close1.png) no-repeat;
+	background-position: center;
+	background-size: 20px
+}
+
+.school-square .square ul.select li.select-result dl dd.addStyle:hover {
+	border-color: #ff7c00;
+	color: #ff7c00
+}
+
+.school-square .square ul.select li.select-result dl dd.school {
+	padding-left: 0
+}
+
+.school-square .square ul.select li.select-result dl dd.addStyle:hover .close {
+	background: url(//s2.51offer.com/school/image/2017-03-28/close.png) no-repeat;
+	background-size: 20px;
+	background-position: center;
+	background-color: #ff7c00
+}
+
+.school-square .square ul.select li.select-search {
+	padding: 10px;
+	padding-left: 150px;
+	font-size: 14px;
+	border: 1px solid #e0e0e0
+}
+
+.school-square .square ul.select li.select-search dl {
+	position: relative
+}
+
+.school-square .square ul.select li.select-search dl dt {
+	position: absolute;
+	left: -124px;
+	height: 29px;
+	line-height: 29px;
+	width: 104px;
+	text-align: right
+}
+
+.school-square .square ul.select li.select-search dl dd {
+	float: left;
+	display: inline;
+	position: relative
+}
+
+.school-square .square ul.select li.select-search dl dd .input-search {
+	height: 29px;
+	line-height: 31px;
+	width: 260px;
+	border: 1px solid #e0e0e0;
+	padding-left: 10px
+}
+
+.school-square .square ul.select li.select-search dl dd button {
+	width: 44px;
+	height: 30px;
+	background-color: #4a90e2;
+	border-radius: 5px;
+	border: 0;
+	vertical-align: bottom;
+	background-image: url(//s2.51offer.com/school/image/2017-03-28/search.png);
+	background-repeat: no-repeat;
+	background-position: center center;
+	cursor: pointer;
+	margin-left: 5px
+}
+
+.school-square .square ul.select li.select-search dl dd .result-lists {
+	width: 272px;
+	box-sizing: border-box;
+	display: none;
+	position: absolute;
+	background-color: #fff;
+	z-index: 1;
+	border-bottom: 1px solid #e0e0e0
+}
+
+.school-square .square ul.select li.select-search dl dd .result-lists a {
+	box-sizing: border-box;
+	display: block;
+	font-size: 16px;
+	color: #9b9b9b;
+	padding: 5px 0;
+	padding-left: 20px;
+	cursor: pointer;
+	border-left: 1px solid #e0e0e0;
+	border-right: 1px solid #e0e0e0
+}
+
+.school-square .square ul.select li.select-search dl dd .result-lists a:hover {
+	background-color: #e0e0e0
+}
+
+.school-square .square ul.select li.select-search dl dd .result-lists a.active {
+	background-color: #e0e0e0
+}
+
+.school-square .square ul.select li.select-list {
+	padding: 12px;
+	padding-left: 150px;
+	font-size: 14px;
+	border: 1px solid #e0e0e0;
+	border-top: 0
+}
+
+.school-square .square ul.select li.select-list dl {
+	position: relative;
+	width: 1000px
+}
+
+.school-square .square ul.select li.select-list dl dt {
+	position: absolute;
+	left: -126px;
+	width: 106px;
+	text-align: right
+}
+
+.school-square .square ul.select li.select-list dl dd {
+	float: left;
+	display: inline;
+	margin-right: 30px;
+	height: 33px;
+	cursor: pointer
+}
+
+.school-square .square ul.select li.select-list dl dd a {
+	text-decoration: none;
+	color: #333
+}
+
+.school-square .square ul.select li.select-list dl dd a:hover {
+	color: #259
+}
+
+.school-square .square ul.select li.select-list dl dd.last {
+	position: absolute;
+	width: 45px;
+	height: 24px;
+	margin: 0;
+	right: -30px;
+	background: url(//s2.51offer.com/school/2015-05-21/j.png) no-repeat;
+	background-position: right center;
+	display: none
+}
+
+.school-square .square ul.select li.select-list dl dd.last.op {
+	background-image: url(//s2.51offer.com/school/2015-05-21/jo.png)
+}
+
+.school-square .square ul.select li.select-list.switch {
+	height: 24px;
+	overflow: hidden
+}
+
+.school-square .square ul.select li.select-list.switch dd {
+	height: 33px
+}
+
+.school-square .square ul.select li.select-list.selectCountry,
+.school-square .square ul.select li.select-list.selectRank {
+	height: 24px
+}
+
+.school-square .square ul.select li#select-rank dd {
+	margin-right: 30px
+}
+
+.school-square .square ul.select li#select-rank dd input {
+	width: 38px;
+	height: 28px;
+	line-height: 28px;
+	border: 1px solid #e0e0e0;
+	box-sizing: border-box;
+	text-align: center
+}
+
+.school-square .square ul.select li#select-rank dd button {
+	background-color: #5b90de;
+	color: #fff;
+	font-size: 14px;
+	text-align: center;
+	height: 30px;
+	border: 0;
+	padding: 0 8px;
+	border-radius: 5px;
+	margin-left: 10px;
+	cursor: pointer
+}
+
+.school-square .school-result {
+	margin-top: 36px;
+	margin-bottom: 100px
+}
+
+.school-square .school-result .head {
+	border-bottom: 1px solid #ddd;
+	padding-bottom: 10px
+}
+
+.school-square .school-result .head h3 {
+	font-size: 18px;
+	color: #333
+}
+
+.school-square .school-result .head a {
+	float: right;
+	font-size: 16px;
+	width: 100px;
+	color: #333;
+	text-align: center;
+	cursor: pointer
+}
+
+.school-square .school-result .head a.rank.active {
+	color: #ff7c00
+}
+
+.school-square .school-result .content .school-info li {
+	width: 100%;
+	padding: 20px 0;
+	border-bottom: 1px solid #eee
+}
+
+.school-square .school-result .content .school-info li div {
+	float: left
+}
+
+.school-square .school-result .content .school-info li .school-logo {
+	float: left;
+	width: 128px;
+	height: 48px;
+	margin-right: 20px;
+	border: 1px solid #e0e0e0;
+	overflow: hidden
+}
+
+.school-square .school-result .content .school-info li .school-logo img {
+	width: 130px;
+	height: 50px;
+	margin-left: -1px;
+	margin-top: -1px
+}
+
+.school-square .school-result .content .school-info li .school-des a {
+	line-height: 1.5em
+}
+
+.school-square .school-result .content .school-info li .school-des .school-name a {
+	color: #4a90e2;
+	font-size: 16px
+}
+
+.school-square .school-result .content .school-info li .school-des .school-position a {
+	color: #999;
+	font-size: 14px;
+	margin-top: 5px
+}
+
+.school-square .school-result .content .school-info li .school-chat {
+	float: right;
+	padding-top: 13px;
+	margin-right: 20px
+}
+
+.school-square .school-result .content .school-info li .school-chat-btn {
+	background-color: #5b90de;
+	color: #fff;
+	font-size: 12px;
+	text-align: center;
+	height: 26px;
+	line-height: 26px;
+	border: 0;
+	padding: 0 8px;
+	border-radius: 5px;
+	cursor: pointer;
+	display: block
+}
+
+.school-square .school-result .content .school-info li .rank {
+	float: right;
+	width: 100px;
+	text-align: center
+}
+
+.school-square .school-result .content .school-info li .rank p {
+	font-size: 26px;
+	height: 50px;
+	line-height: 50px;
+	color: #999
+}
+
+.school-square .school-result .content .school-info li .rank.active p {
+	color: #ff7c00
+}
+
+.school-square .school-result .content .noschool p {
+	text-align: center;
+	background-color: #fffaf2;
+	border: 1px solid #ffebcc;
+	color: #818181;
+	height: 38px;
+	line-height: 38px;
+	margin: 40px 0;
+	font-size: 14px
+}
+
+.school-square .school-result .global-paging a:hover {
+	background-color: #6c90b5;
+	color: #fff
+}
+
+.school-square .school-result .pages {
+	float: left;
+	position: relative;
+	left: 50%;
+	margin-top: 30px
+}
+
+.school-square .school-result .pages .wrap {
+	position: relative;
+	left: -50%
+}
+
+.school-square .school-result .pages .wrap ul {
+	float: left
+}
+
+.school-square .school-result .pages .wrap li {
+	float: left;
+	border: 1px solid #dfe2e7;
+	font-size: 14px;
+	height: 20px;
+	line-height: 20px;
+	padding: 2px 5px;
+	margin: 0 2px
+}
+
+.school-square .school-result .pages .wrap li a {
+	color: #797878
+}
+
+.school-square .school-result .pages .wrap li:hover {
+	background-color: #6c90b5
+}
+
+.school-square .school-result .pages .wrap li:hover a {
+	color: #fff
+}
+
+.school-square .school-result .pages .wrap li.active {
+	background-color: #6c90b5
+}
+
+.school-square .school-result .pages .wrap li.active a {
+	color: #fff
+}
+
+.school-square .school-result .pages .wrap span {
+	margin-left: 30px
+}
+
+.school-square .school-result .pages .wrap span input {
+	text-align: center;
+	width: 36px;
+	height: 20px;
+	line-height: 22px;
+	padding: 0 3px;
+	font-size: 12px;
+	border: 1px solid #b3b3b3
+}
+
+.school-square .school-result .pages .wrap span button {
+	background-color: #43a0ff;
+	color: #fff;
+	width: 44px;
+	height: 22px;
+	line-height: 23px;
+	border: 0;
+	cursor: pointer;
+	outline: 0;
+	margin-left: 15px
+}
+
+footer.new-school-footer {
+	padding-top: 20px;
+	margin-bottom: 30px
+}
+
+footer.new-school-footer h4.title {
+	font-size: 14px;
+	float: left;
+	color: #197ae5;
+	border-bottom: 1px solid #197ae5;
+	padding-bottom: 4px;
+	cursor: pointer
+}
+
+footer.new-school-footer p {
+	padding-top: 10px;
+	border-top: 1px solid #e2e8ee;
+	margin-top: -1px
+}
+
+footer.new-school-footer p a {
+	float: left;
+	color: #999;
+	font-size: 12px;
+	margin: 0 4px
+}
