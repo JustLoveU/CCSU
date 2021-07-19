@@ -1,0 +1,30 @@
+
+server:
+  port: 8083
+
+# mysql
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    #MySQL
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/website_university_admin?characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: qwer1234
+
+
+  mail:
+    username: lomtom@qq.com
+    password: snfbimzpogveebag
+    host: smtp.qq.com
+    properties:
+      mail.smtp.ssl.enable: true
+
+  jackson:
+    time-zone: GMT+8
+    date-format: yyyy-MM-dd HH:mm:ss
+  resources:
+    static-locations: classpath:/static/,classpath:/views/
+
+mybatis-plus:
+  mapperLocations: classpath:mapper/**/*.xml

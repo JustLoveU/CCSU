@@ -1,0 +1,9 @@
+数据库名称：website_university_admin
+数据库用户：root
+数据库密码：123456
+
+
+有swagger文档接口
+http://localhost:8083/swagger-ui.html
+
+后端运行端口为8083
