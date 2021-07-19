@@ -1,0 +1,10 @@
+(global["webpackJsonp"]=global["webpackJsonp"]||[]).push([["node-modules/uview-ui/components/u-index-anchor/u-index-anchor"],{4685:function(t,e,n){"use strict";Object.defineProperty(e,"__esModule",{value:!0}),e.default=void 0;var u={name:"u-index-anchor",props:{useSlot:{type:Boolean,default:!1},index:{type:String,default:""},customStyle:{type:Object,default:function(){return{}}}},data:function(){return{active:!1,wrapperStyle:{},anchorStyle:{}}},inject:["UIndexList"],mounted:function(){this.UIndexList.children.push(this),this.UIndexList.updateData()},computed:{customAnchorStyle:function(){return Object.assign(this.anchorStyle,this.customStyle)}}};e.default=u},"704f":function(t,e,n){"use strict";var u,r=function(){var t=this,e=t.$createElement,n=(t._self._c,t.__get_style([t.wrapperStyle])),u=t.$u.guid(),r=t.__get_style([t.customAnchorStyle]);t.$mp.data=Object.assign({},{$root:{s0:n,g0:u,s1:r}})},c=[];n.d(e,"b",(function(){return r})),n.d(e,"c",(function(){return c})),n.d(e,"a",(function(){return u}))},"9df8":function(t,e,n){"use strict";n.r(e);var u=n("704f"),r=n("d288");for(var c in r)"default"!==c&&function(t){n.d(e,t,(function(){return r[t]}))}(c);n("f445");var o,a=n("f0c5"),i=Object(a["a"])(r["default"],u["b"],u["c"],!1,null,"6181e2d2",null,!1,u["a"],o);e["default"]=i.exports},d288:function(t,e,n){"use strict";n.r(e);var u=n("4685"),r=n.n(u);for(var c in u)"default"!==c&&function(t){n.d(e,t,(function(){return u[t]}))}(c);e["default"]=r.a},e963:function(t,e,n){},f445:function(t,e,n){"use strict";var u=n("e963"),r=n.n(u);r.a}}]);
+;(global["webpackJsonp"] = global["webpackJsonp"] || []).push([
+    'node-modules/uview-ui/components/u-index-anchor/u-index-anchor-create-component',
+    {
+        'node-modules/uview-ui/components/u-index-anchor/u-index-anchor-create-component':(function(module, exports, __webpack_require__){
+            __webpack_require__('543d')['createComponent'](__webpack_require__("9df8"))
+        })
+    },
+    [['node-modules/uview-ui/components/u-index-anchor/u-index-anchor-create-component']]
+]);

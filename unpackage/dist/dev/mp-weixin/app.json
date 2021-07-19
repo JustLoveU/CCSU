@@ -1,0 +1,68 @@
+{
+  "pages": [
+    "pages/index/index/index",
+    "pages/comment/index/index",
+    "pages/info/index/index",
+    "pages/diy/index/index",
+    "pages/my/index/index",
+    "pages/my/login/login",
+    "pages/info/comment/comment",
+    "pages/diy/result/result",
+    "pages/info/list/list",
+    "pages/info/detail/detail",
+    "pages/my/about/about",
+    "pages/my/register/register",
+    "pages/my/service/service",
+    "pages/my/collection/collection",
+    "pages/index/search/search",
+    "pages/index/universitylist/universitylist",
+    "pages/info/university_detail/university_detail",
+    "pages/my/ing/ing"
+  ],
+  "subPackages": [],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "留学无难事",
+    "navigationBarBackgroundColor": "#F8F8F8",
+    "backgroundColor": "#F8F8F8"
+  },
+  "tabBar": {
+    "color": "#000000",
+    "selectedColor": "#23EBB9",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index/index",
+        "text": "首页",
+        "iconPath": "static/index.png",
+        "selectedIconPath": "static/index_select.png"
+      },
+      {
+        "pagePath": "pages/comment/index/index",
+        "text": "资讯",
+        "iconPath": "static/info.png",
+        "selectedIconPath": "static/info_select.png"
+      },
+      {
+        "pagePath": "pages/info/index/index",
+        "text": "点评",
+        "iconPath": "static/comment.png",
+        "selectedIconPath": "static/comment_select.png"
+      },
+      {
+        "pagePath": "pages/diy/index/index",
+        "text": "DIY",
+        "iconPath": "static/diy.png",
+        "selectedIconPath": "static/diy_select.png"
+      },
+      {
+        "pagePath": "pages/my/index/index",
+        "text": "我的",
+        "iconPath": "static/my.png",
+        "selectedIconPath": "static/my_select.png"
+      }
+    ]
+  },
+  "usingComponents": {},
+  "sitemapLocation": "sitemap5.json"
+}

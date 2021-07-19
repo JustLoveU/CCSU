@@ -1,0 +1,10 @@
+{
+  "navigationBarTitleText": "点评",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "u-navbar": "/node-modules/uview-ui/components/u-navbar/u-navbar",
+    "u-divider": "/node-modules/uview-ui/components/u-divider/u-divider",
+    "u-link": "/node-modules/uview-ui/components/u-link/u-link",
+    "u-image": "/node-modules/uview-ui/components/u-image/u-image"
+  }
+}

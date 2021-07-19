@@ -1,0 +1,149 @@
+{
+	"easycom": {
+		"^u-(.*)": "uview-ui/components/u-$1/u-$1.vue"
+	},
+	"pages": [{
+			"path": "pages/index/index/index",
+			"style": {
+				"navigationBarTitleText": "留学无难事",
+				"navigationStyle": "custom"
+			}
+		}, {
+			"path": "pages/comment/index/index",
+			"style": {
+				"navigationBarTitleText": "资讯",
+				"navigationStyle": "custom"
+			}
+		}, {
+			"path": "pages/info/index/index",
+			"style": {
+				"navigationBarTitleText": "点评",
+				"navigationStyle": "custom"
+				// "enablePullDownRefresh":true
+			}
+		},
+		{
+			"path": "pages/diy/index/index",
+			"style": {
+				"navigationBarTitleText": "智能DIY",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/my/index/index",
+			"style": {
+				"navigationBarTitleText": "我的",
+				"navigationStyle": "custom"
+			}
+		}, {
+			"path": "pages/my/login/login",
+			"style": {}
+		}, {
+			"path": "pages/info/comment/comment",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		}, {
+			"path": "pages/diy/result/result",
+			"style": {
+				"navigationBarTitleText": "智能DIY结果",
+				"navigationStyle": "custom"
+			}
+		}, {
+			"path": "pages/info/list/list",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		}, {
+			"path": "pages/info/detail/detail",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		}, {
+			"path": "pages/my/about/about",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		}, {
+			"path": "pages/my/register/register",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		}, {
+			"path": "pages/my/service/service",
+			"style": {}
+		}, {
+			"path": "pages/my/collection/collection",
+			"style": {}
+		}, {
+			"path": "pages/index/search/search",
+			"style": {}
+		}
+	    ,{
+            "path" : "pages/index/universitylist/universitylist",
+            "style" : {}
+        }
+        ,{
+            "path" : "pages/info/university_detail/university_detail",
+            "style" : {}
+        }
+        ,{
+            "path" : "pages/my/ing/ing",
+            "style" : {}
+        }
+    ],
+	"tabBar": {
+		"color": "#000000",
+		"selectedColor": "#23EBB9",
+		"borderStyle": "black",
+		"list": [{
+				"pagePath": "pages/index/index/index",
+				"text": "首页",
+				"iconPath": "static/index.png",
+				"selectedIconPath": "static/index_select.png"
+			},
+			{
+				"pagePath": "pages/comment/index/index",
+				"text": "资讯",
+				"iconPath": "static/info.png",
+				"selectedIconPath": "static/info_select.png"
+			},
+			{
+				"pagePath": "pages/info/index/index",
+				"text": "点评",
+				"iconPath": "static/comment.png",
+				"selectedIconPath": "static/comment_select.png"
+			},
+			{
+				"pagePath": "pages/diy/index/index",
+				"text": "DIY",
+				"iconPath": "static/diy.png",
+				"selectedIconPath": "static/diy_select.png"
+			},
+			{
+				"pagePath": "pages/my/index/index",
+				"text": "我的",
+				"iconPath": "static/my.png",
+				"selectedIconPath": "static/my_select.png"
+			}
+		]
+	},
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "留学无难事",
+		"navigationBarBackgroundColor": "#F8F8F8",
+		"backgroundColor": "#F8F8F8"
+	},
+	"condition": {
+		"current": 0,
+		"list": [{
+			"name": "test",
+			"path": "pages/index/index/index"
+		}]
+	},
+	"permission": {
+		"scope.userLocation": {
+			"desc": "你的位置信息将用于小程序位置接口的效果展示"
+		}
+	}
+}

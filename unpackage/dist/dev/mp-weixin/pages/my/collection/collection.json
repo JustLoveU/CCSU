@@ -1,0 +1,10 @@
+{
+  "usingComponents": {
+    "u-tabs-swiper": "/node-modules/uview-ui/components/u-tabs-swiper/u-tabs-swiper",
+    "u-loadmore": "/node-modules/uview-ui/components/u-loadmore/u-loadmore",
+    "u-divider": "/node-modules/uview-ui/components/u-divider/u-divider",
+    "u-row": "/node-modules/uview-ui/components/u-row/u-row",
+    "u-col": "/node-modules/uview-ui/components/u-col/u-col",
+    "u-image": "/node-modules/uview-ui/components/u-image/u-image"
+  }
+}
