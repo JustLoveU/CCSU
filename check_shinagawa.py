@@ -48,6 +48,9 @@ RESERVE_AGREEMENT_URL = (
     f"{BASE_URL}/rsvWInstUseruleRsvApplyAction.do"
 )
 
+RESERVE_CONFIRM_URL = (
+    f"{BASE_URL}/rsvWInstRsvApplyAction.do"
+)
 
 OUTPUT_DIR = Path("output")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -81,7 +84,6 @@ AREA_MAP = {
     "品川": "1400_0",
     "八潮": "1500_0",
     "すべて": "0000_0",
-
 }
 
 ACTIVITY_MAP = {
@@ -92,7 +94,6 @@ ACTIVITY_MAP = {
     "テニス": "31000000_31010100",
     "フットサル": "31000000_31010300",
     "すべて": "31000000",
-
 }
 
 
@@ -104,7 +105,6 @@ TARGET_MANSIONS = {
     "小山台小学校",
     "小山小学校",
     "後地小学校",
-    "清水台小学校",
 }
 
 
@@ -776,13 +776,74 @@ def open_reservation_agreement(
 
     soup = BeautifulSoup(html, "html.parser")
 
+    agree_payload = {}
+
+    for tag in soup.find_all("input"):
+
+        name = tag.get("name")
+
+        if not name:
+            continue
+
+        agree_payload[name] = tag.get("value", "")
+
+    # ✅ 强制同意
+    agree_payload["ruleFg"] = "1"
+
+    trace(f"agree_payload_keys={list(agree_payload.keys())}")
+
 
     r2 = session.post(
         RESERVE_AGREEMENT_URL,
-        data={
-            "ruleFg": "1",
-            "displayNo": "prwcd1000"
-        },
+        data=agree_payload,
+        headers=headers,
+        timeout=30,
+    )
+
+    r2.encoding = "cp932"
+
+    confirm_html = r2.text
+
+    Path("output/agreement_confirm.html").write_text(
+        confirm_html,
+        encoding="utf-8"
+    )
+
+    if "確認" not in confirm_html:
+
+        trace("未进入確認页面")
+        trace(final_html[:500])
+        return None
+
+    trace("✅ 已进入確認页面")
+
+
+    #
+    # → 完了页
+    #
+
+    soup = BeautifulSoup(html, "html.parser")
+
+    rsv_payload = {}
+
+    # ✅ 利用人数
+    rsv_payload["applyNum"] = arg.apply-num
+
+    for tag in soup.find_all("input"):
+
+        name = tag.get("name")
+
+        if not name:
+            continue
+
+        rsv_payload[name] = tag.get("value", "")
+
+
+    trace(f"agree_payload_keys={list(rsv_payload.keys())}")
+
+    r2 = session.post(
+        RESERVE_CONFIRM_URL,
+        data=rsv_payload,
         headers=headers,
         timeout=30,
     )
@@ -796,13 +857,13 @@ def open_reservation_agreement(
         encoding="utf-8"
     )
 
-    if "確認" not in final_html:
+    if "完了" not in final_html:
 
-        trace("未进入確認页面")
+        trace("未进入完了页面")
         trace(final_html[:500])
         return None
 
-    trace("✅ 已进入確認页面")
+    trace("✅ 已进入完了页面")
 
     return final_html
 
