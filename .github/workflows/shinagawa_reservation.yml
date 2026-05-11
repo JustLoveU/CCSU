@@ -32,14 +32,12 @@ jobs:
           SHINAGAWA_USER_ID: ${{ secrets.SHINAGAWA_USER_ID }}
           SHINAGAWA_PASSWORD: ${{ secrets.SHINAGAWA_PASSWORD }}
 
-          SMTP_HOST: ${{ secrets.SMTP_HOST }}
-          SMTP_PORT: ${{ secrets.SMTP_PORT }}
-          SMTP_USER: ${{ secrets.SMTP_USER }}
+          TZ: Asia/Tokyo
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
 
         run: |
           python check_shinagawa.py \
-            --start-date $(date +%Y-%m-%d) \
+            --start-date $(TZ=Asia/Tokyo date +%Y-%m-%d) \
             --area "${{ matrix.area }}" \
             --activity バド \
             --period-days 31 \
