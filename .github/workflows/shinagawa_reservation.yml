@@ -36,6 +36,7 @@ jobs:
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
 
         run: |
+          echo "start-date=$(TZ=Asia/Tokyo date +%Y-%m-%d)"
           python check_shinagawa.py \
             --start-date $(TZ=Asia/Tokyo date +%Y-%m-%d) \
             --area "${{ matrix.area }}" \
