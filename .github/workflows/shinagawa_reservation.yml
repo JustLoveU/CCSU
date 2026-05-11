@@ -50,7 +50,7 @@ jobs:
         
       - name: Upload debug files
         uses: actions/upload-artifact@v4
-        if: always()
+        if: github.event_name == 'workflow_dispatch'
         with:
           name: debug-output
           path: output/
