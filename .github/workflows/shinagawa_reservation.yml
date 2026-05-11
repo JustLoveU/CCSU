@@ -1,4 +1,4 @@
-name: Shinagawa Reservation Check
+name: shinagawa-reservation-check
 
 on:
   schedule:
@@ -39,14 +39,13 @@ jobs:
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
 
         run: |
-          echo "start-date=$(TZ=Asia/Tokyo date +%Y-%m-%d)"
           python check_shinagawa.py \
             --start-date $(TZ=Asia/Tokyo date +%Y-%m-%d) \
             --area "${{ matrix.area }}" \
             --activity バド \
             --period-days 31 \
             --date-mode 4 \
-            --weekdays 6,7,9 \
+            --weekdays 5,6,7,9 \
             --apply-num 15 \
             --mail-to tl2019@yahoo.co.jp
         
