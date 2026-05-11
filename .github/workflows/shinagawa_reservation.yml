@@ -5,6 +5,10 @@ on:
     - cron: "0 1,4,9,13 * * *"   # ✅ 每天JST10:00 / 13:00 / 18:00 / 22:00
   workflow_dispatch:         # ✅ 手动点按钮运行
 
+env:
+  TZ: Asia/Tokyo
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   run:
     runs-on: ubuntu-latest
@@ -32,7 +36,6 @@ jobs:
           SHINAGAWA_USER_ID: ${{ secrets.SHINAGAWA_USER_ID }}
           SHINAGAWA_PASSWORD: ${{ secrets.SHINAGAWA_PASSWORD }}
 
-          TZ: Asia/Tokyo
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
 
         run: |
