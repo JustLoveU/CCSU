@@ -47,3 +47,10 @@ jobs:
             --weekdays 6,7,9 \
             --apply-num 15 \
             --mail-to tl2019@yahoo.co.jp
+        
+      - name: Upload debug files
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: debug-output
+          path: output/
