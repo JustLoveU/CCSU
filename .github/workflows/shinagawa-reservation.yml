@@ -53,5 +53,5 @@ jobs:
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
         with:
-          name: debug-output
+          name: debug-output-${{ matrix.area }}
           path: output/
