@@ -2,7 +2,8 @@ name: shinagawa-reservation-check
 
 on:
   schedule:
-    - cron: "0 1,4,9,13 * * *"   # ✅ 每天JST10:00 / 13:00 / 18:00 / 22:00
+    #- cron: "0 1,4,9,13 * * *"   # ✅ 每天JST10:00 / 13:00 / 18:00 / 22:00
+    - cron: "*/5 * * * *"
   workflow_dispatch:         # ✅ 手动点按钮运行
 
 env:
