@@ -1,0 +1,58 @@
+name: shinagawa-reservation
+
+on:
+  schedule:
+    - cron: "59 0,3,8,12 * * *"   # ✅ 每天JST10:00 / 13:00 / 18:00 / 22:00
+    - cron: "*/15 * * * *"
+  workflow_dispatch:         # ✅ 手动点按钮运行
+
+env:
+  TZ: Asia/Tokyo
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        area: [大崎, 荏原]
+        
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: |
+          pip install requests beautifulsoup4
+
+      - name: Run script
+        env:
+          SHINAGAWA_USER_ID: ${{ secrets.SHINAGAWA_USER_ID }}
+          SHINAGAWA_PASSWORD: ${{ secrets.SHINAGAWA_PASSWORD }}
+
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+
+        run: |
+          python check_shinagawa.py \
+            --start-date $(TZ=Asia/Tokyo date +%Y-%m-%d) \
+            --area "${{ matrix.area }}" \
+            --activity バド \
+            --period-days 31 \
+            --date-mode 4 \
+            --weekdays 5,6,7,9 \
+            --apply-num 15 \
+            --mail-to tl2019@yahoo.co.jp
+        
+      - name: Upload debug files
+        uses: actions/upload-artifact@v4
+        if: github.event_name == 'workflow_dispatch'
+        with:
+          name: debug-output
+          path: output/
