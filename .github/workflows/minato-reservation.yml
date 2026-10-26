@@ -1,0 +1,47 @@
+name: minato-reservation
+
+on:
+  schedule:
+    # JST 07:00 〜 23:40 まで20分おき (UTC 22:00〜14:40)
+    - cron: "*/20 0-14,22-23 * * *"
+    # JST 24:00 (00:00) ちょうど (UTC 15:00)
+    - cron: "0 15 * * *"
+  workflow_dispatch: # 手動実行ボタン
+
+env:
+  TZ: Asia/Tokyo
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  reserve:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4 python-dotenv
+
+      - name: Run reservation bot
+        env:
+          RSV_USER_ID: ${{ secrets.MINATO_USER_ID }}
+          RSV_PASSWORD: ${{ secrets.MINATO_PASSWORD }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+        run: |
+          python minato_reserve.py
+
+      - name: Upload debug output
+        uses: actions/upload-artifact@v4
+        # 手動実行時、またはエラー発生時に output フォルダを保存して確認可能にする
+        if: always()
+        with:
+          name: minato-debug-output
+          path: output/
+          retention-days: 3
