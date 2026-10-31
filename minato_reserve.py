@@ -8,7 +8,7 @@ import json
 import time
 import smtplib
 import urllib.parse
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -50,7 +50,7 @@ TARGET_DATE = (datetime.now() + timedelta(days=6)).strftime("%Y-%m-%d")
 TARGET_DAYS = "31"
 TARGET_WEEKDAYS = "3,5,6,7,9"           # 水,金,土,日,祝
 TARGET_PURPOSE = "2010_2010040"         # バドミントン
-APPLY_NUM = "15"                        # 利用人数: 15人
+APPLY_NUM = "10"                        # 利用人数: 10人に変更
 
 # 港区 5地区コード
 AREA_MAP = {
@@ -68,7 +68,7 @@ ALL_SCHOOLS = {
     # 赤坂地区
     "赤坂学園赤坂小学校", "青山小学校", "青南小学校", "赤坂学園赤坂中学校", "青山中学校",
     # 高輪地区
-    "高輪台小学校", "白金小学校", "三田中学校", "高松中学校", "白金の丘学園",
+    "高輪台小学校", "白金小学校", "三田中学校", "高松中学校", "白金の丘学園", "御田小学校（仮校舎）",
     # 芝浦港南地区
     "芝浦小学校", "芝浜小学校", "港南小学校", "港南中学校", "お台場学園港陽小・中学校",
     # 芝地区
@@ -76,7 +76,7 @@ ALL_SCHOOLS = {
 }
 
 # 除外校
-EXCLUDE_SCHOOLS = {"笄小学校", "東町小学校", "御田小学校（仮校舎）"}
+EXCLUDE_SCHOOLS = {"笄小学校", "東町小学校"}
 
 # 優先順位（インデックス順: 0が最優先）
 PRIORITY_ORDER = [
@@ -92,9 +92,17 @@ OUTPUT_DIR = Path("output")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 # ======================================================================
 
+JST = timezone(timedelta(hours=9))
+
+
+def is_maintenance_time() -> bool:
+    """JST 00:00 〜 04:59 のシステムメンテナンス時間帯か判定"""
+    now_jst = datetime.now(JST)
+    return 0 <= now_jst.hour < 5
+
 
 def log(msg: str):
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    timestamp = datetime.now(JST).strftime("%Y-%m-%d %H:%M:%S")
     formatted = f"[{timestamp}] {msg}"
     print(formatted)
     with open(OUTPUT_DIR / "execution.log", "a", encoding="utf-8") as f:
@@ -117,7 +125,7 @@ def send_mail(subject: str, body: str):
         with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=15) as server:
             server.login(SMTP_USER, SMTP_PASS)
             server.send_message(msg)
-        log("=> ★ 予約完了通知メールを送信しました！")
+        log("=> ★ メールを送信しました！")
     except Exception as e:
         log(f"【エラー】メール送信失敗: {e}")
 
@@ -311,7 +319,6 @@ def execute_booking(session: requests.Session, candidate_raw: dict, area_bcd: st
     soup_daily = BeautifulSoup(r_daily.text, "html.parser")
     apply_payload = {tag.get("name"): tag.get("value", "") for tag in soup_daily.find_all("input") if tag.get("name")}
 
-    # 修正箇所: 辞書キーの区切りを ':' に統一
     apply_payload.update({
         "date": "5",
         "daystart": TARGET_DATE,
@@ -345,12 +352,10 @@ def execute_booking(session: requests.Session, candidate_raw: dict, area_bcd: st
         "User-Agent": "Mozilla/5.0"
     }
 
-    # Step 1: 申込画面へPOST
     r_apply = session.post(RESERVE_APPLY_URL, data=apply_payload, headers=headers, timeout=20)
     r_apply.encoding = "cp932"
     current_html = r_apply.text
 
-    # Step 2: 利用規約画面がある場合は同意処理
     if "利用規約" in current_html:
         soup_agree = BeautifulSoup(current_html, "html.parser")
         agree_payload = {tag.get("name"): tag.get("value", "") for tag in soup_agree.find_all("input") if tag.get("name")}
@@ -361,10 +366,9 @@ def execute_booking(session: requests.Session, candidate_raw: dict, area_bcd: st
         current_html = r_agree.text
 
     if "確認" not in current_html and "予約" not in current_html:
-        log(f"【エラー】『{mansion}』の予約確認画面へ進めませんでした（利用制限・重複等の可能性）。")
+        log(f"【エラー】『{mansion}』の予約確認画面へ進めませんでした。")
         return False
 
-    # Step 3: 人数入力と確定POST
     soup_confirm = BeautifulSoup(current_html, "html.parser")
     final_payload = {tag.get("name"): tag.get("value", "") for tag in soup_confirm.find_all("input") if tag.get("name")}
 
@@ -384,7 +388,6 @@ def execute_booking(session: requests.Session, candidate_raw: dict, area_bcd: st
     r_final.encoding = "cp932"
     final_html = r_final.text
 
-    # Step 4: 完了判定
     if "完了" in final_html or "受付番号" in final_html or "予約番号" in final_html:
         rsv_no_match = re.search(r'(?:予約番号|受付番号)[：:\s]*([A-Za-z0-9\-]+)', final_html)
         rsv_no = rsv_no_match.group(1) if rsv_no_match else "画面参照"
@@ -401,7 +404,7 @@ def execute_booking(session: requests.Session, candidate_raw: dict, area_bcd: st
             f"- 利用日時: {date_str} {time_str}\n"
             f"- 利用人数: {APPLY_NUM}人\n"
             f"- 利用目的: バドミントン\n"
-            f"- 確定時刻: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+            f"- 確定時刻: {datetime.now(JST).strftime('%Y-%m-%d %H:%M:%S')}\n\n"
             f"詳細はマイページの予約一覧をご確認ください。"
         )
         send_mail(mail_subject, mail_body)
@@ -412,8 +415,8 @@ def execute_booking(session: requests.Session, candidate_raw: dict, area_bcd: st
 
 
 def main():
-    log("=== 港区学校施設 巡回ボット 起動（優先順位・全予約対応版） ===")
-    log(f"検索開始日: {TARGET_DATE} / 期間: {TARGET_DAYS}日間 / 人数: {APPLY_NUM}人")
+    log("=== 港区学校施設 巡回ボット 起動 ===")
+    log(f"検索開始日: {TARGET_DATE} / 期間: {TARGET_DAYS}日間 / 設定人数: {APPLY_NUM}人")
 
     session = requests.Session()
     session.headers.update({
@@ -428,7 +431,7 @@ def main():
         session.get(INDEX_URL, timeout=10)
         all_detected_school_slots = []
 
-        # 1. 未ログインのまま全5地区を高速巡回・全ページ取得
+        # 1. 未ログインで全5地区を高速巡回・全ページ取得
         for area_name, area_bcd in AREA_MAP.items():
             t0 = time.time()
             all_slots = search_unlogged_district(session, area_bcd)
@@ -450,14 +453,15 @@ def main():
 
             time.sleep(0.2)
 
-        # 2. 対象学校枠が0件ならログインせず終了（監査ログゼロ）
+        # 2. 対象学校枠が0件なら終了
         if not all_detected_school_slots:
             log("=> 全地区で対象学校の空き枠はありませんでした。ログインせずに巡回を終了します。")
             return
 
-        # 3. 優先順位ソート (高松中 -> 御成門中 -> 芝浜小 -> 三田中 -> その他日時順)
+        # 3. 優先順位ソート
         all_detected_school_slots.sort(key=get_school_priority)
 
+        candidate_lines = []
         log("=" * 70)
         log(f"【予約候補リスト（優先順位ソート済: 全 {len(all_detected_school_slots)} 件）】")
         for rank, s in enumerate(all_detected_school_slots, 1):
@@ -466,15 +470,33 @@ def main():
             t_str = f"{s.get('sJTime2', '')}〜{s.get('eJTime2', '')}"
             fac = s.get('bcdNm', '')
             rm = s.get('icdNm', '')
-            log(f"  [{rank}位] {d_str} {t_str} | {fac} ({rm}) [{s['_area_name']}地区]")
+            info_line = f"[{rank}位] {d_str} {t_str} | {fac} ({rm}) [{s['_area_name']}地区]"
+            log(f"  {info_line}")
+            candidate_lines.append(f"- {info_line}")
         log("=" * 70)
 
-        # 4. ここで初めてログインを実行
+        # 4. 夜間メンテナンス時間帯（00:00〜05:00）の判定
+        if is_maintenance_time():
+            log("【夜間メンテナンス時間帯検知 (JST 00:00〜05:00)】")
+            log("=> 予約機能が停止しているため、ログイン・自動予約を行わずメール通知のみ発報します。")
+
+            mail_subject = f"【空き枠検知通知（夜間メンテ中）】港区学校施設に空き枠が出ました ({len(all_detected_school_slots)}件)"
+            mail_body = (
+                f"港区施設予約システムにて対象学校の空き枠を検知しました。\n"
+                f"※現在（JST 00:00〜05:00）はシステム夜間メンテナンス時間帯のため、自動予約は実行していません。\n"
+                f"朝5:00以降にシステムへログインし、手動で予約してください。\n\n"
+                f"■ 検出された候補一覧（優先順位順）:\n"
+                + "\n".join(candidate_lines) + "\n\n"
+                f"検知時刻: {datetime.now(JST).strftime('%Y-%m-%d %H:%M:%S')}"
+            )
+            send_mail(mail_subject, mail_body)
+            return
+
+        # 5. 通常時間帯（05:00〜23:59）の場合：ログインして優先順位順に自動予約
         if not login(session):
             return
         logged_in = True
 
-        # 5. 複数候補を優先順位順にすべて予約実行
         success_count = 0
         for slot in all_detected_school_slots:
             mansion = slot.get("bcdNm", "")
