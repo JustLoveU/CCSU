@@ -477,22 +477,33 @@ def main():
 
         # 4. 夜間メンテナンス時間帯（00:00〜05:00）の判定
         if is_maintenance_time():
-            log("【夜間メンテナンス時間帯検知 (JST 00:00〜05:00)】")
-            log("=> 予約機能が停止しているため、ログイン・自動予約を行わずメール通知のみ発報します。")
+            now_jst = datetime.now(JST)
+            # 翌朝（本日）の 05:00:03 JST を計算
+            target_0500 = now_jst.replace(hour=5, minute=0, second=3, microsecond=0)
+            wait_seconds = (target_0500 - now_jst).total_seconds()
 
-            mail_subject = f"【空き枠検知通知（夜間メンテ中）】港区学校施設に空き枠が出ました ({len(all_detected_school_slots)}件)"
+            log(f"【夜間メンテナンス時間帯検知 (JST {now_jst.strftime('%H:%M:%S')})】")
+            log(f"=> 対象枠を検知しました。メンテ明け (05:00:03) まで {int(wait_seconds)} 秒間待機します。")
+
+            # 1. まず事前速報メールを送信
+            mail_subject = f"【速報・待機中】夜間メンテ明け(05:00)に自動予約を実行します ({len(all_detected_school_slots)}件)"
             mail_body = (
                 f"港区施設予約システムにて対象学校の空き枠を検知しました。\n"
-                f"※現在（JST 00:00〜05:00）はシステム夜間メンテナンス時間帯のため、自動予約は実行していません。\n"
-                f"朝5:00以降にシステムへログインし、手動で予約してください。\n\n"
-                f"■ 検出された候補一覧（優先順位順）:\n"
+                f"現在システムメンテナンス中のため、スクリプトは 05:00:03 まで待機し、\n"
+                f"メンテ明けと同時に自動予約を試みます。\n\n"
+                f"■ 予約予定の候補（最優先枠）:\n"
                 + "\n".join(candidate_lines) + "\n\n"
-                f"検知時刻: {datetime.now(JST).strftime('%Y-%m-%d %H:%M:%S')}"
+                f"検知時刻: {now_jst.strftime('%Y-%m-%d %H:%M:%S')}"
             )
             send_mail(mail_subject, mail_body)
-            return
 
-        # 5. 通常時間帯（05:00〜23:59）の場合：ログインして優先順位順に自動予約
+            # 2. 05:00:03 まで待機（最大5時間）
+            if wait_seconds > 0:
+                time.sleep(wait_seconds)
+
+            log("=> 05:00 を迎えました！ メンテ明けの即時予約処理を開始します。")
+
+        # 5. ログインして優先順位順に自動予約（通常時 または 05:00待機明け後）
         if not login(session):
             return
         logged_in = True
