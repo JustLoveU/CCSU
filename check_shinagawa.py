@@ -334,7 +334,7 @@ def get_confirm_page(session: requests.Session, candidate_raw: dict, area_bcd: s
         "date": "4",
         "daystart": start_date,
         "days": TARGET_DAYS,
-        "dayofweekClearFlg", "0",
+        "dayofweekClearFlg": "0",
         "timezoneClearFlg": "0",
         "selectAreaBcd": area_bcd,
         "selectIcd": "",
