@@ -353,7 +353,7 @@ def get_confirm_page(session: requests.Session, candidate_raw: dict, area_bcd: s
         "dayofweekClearFlg": "0",
         "timezoneClearFlg": "0",
         "selectAreaBcd": area_bcd,
-        "selectIcd", "",
+        "selectIcd": "",
         "selectPpsClPpscd": TARGET_PURPOSE,
         "selectUseYmd": str(candidate_raw.get("useYmd", "")),
         "selectBldCd": str(candidate_raw.get("bcd", "")),
