@@ -34,25 +34,21 @@ RESERVE_APPLY_URL = f"{BASE_URL}/rsvWOpeReservedApplyAction.do"
 RESERVE_AGREEMENT_URL = f"{BASE_URL}/rsvWInstUseruleRsvApplyAction.do"
 RESERVE_CONFIRM_URL = f"{BASE_URL}/rsvWInstRsvApplyAction.do"
 
-# 認証情報
 USER_ID = os.getenv("RSV_USER_ID", "60064531")
 PASSWORD = os.getenv("RSV_PASSWORD", "")
 
-# メール設定
 SMTP_HOST = "smtp.mail.yahoo.co.jp"
 SMTP_PORT = 465
 SMTP_USER = "tl2019@yahoo.co.jp"
 SMTP_PASS = os.getenv("SMTP_PASS", "")
 MAIL_TO = "tl2019@yahoo.co.jp"
 
-# 検索条件
 TARGET_DATE = (datetime.now() + timedelta(days=6)).strftime("%Y-%m-%d")
 TARGET_DAYS = "31"
 TARGET_WEEKDAYS = "3,5,6,7,9"           # 水,金,土,日,祝
 TARGET_PURPOSE = "2010_2010040"         # バドミントン
-APPLY_NUM = "10"                        # 利用人数: 10人
+APPLY_NUM = "10"
 
-# 港区 5地区コード
 AREA_MAP = {
     "麻布": "1000_0",
     "赤坂": "2000_0",
@@ -61,24 +57,16 @@ AREA_MAP = {
     "芝": "5000_0"
 }
 
-# ==================== 学校ホワイトリスト & 優先度設定 ====================
 ALL_SCHOOLS = {
-    # 麻布地区
     "麻布小学校", "南山小学校", "本村小学校", "六本木中学校", "高陵中学校",
-    # 赤坂地区
     "赤坂学園赤坂小学校", "青山小学校", "青南小学校", "赤坂学園赤坂中学校", "青山中学校",
-    # 高輪地区
     "高輪台小学校", "白金小学校", "三田中学校", "高松中学校", "白金の丘学園", "御田小学校（仮校舎）",
-    # 芝浦港南地区
     "芝浦小学校", "芝浜小学校", "港南小学校", "港南中学校", "お台場学園港陽小・中学校",
-    # 芝地区
     "御成門学園御成門小学校", "芝小学校", "赤羽小学校", "御成門学園御成門中学校"
 }
 
-# 除外校
 EXCLUDE_SCHOOLS = {"笄小学校", "東町小学校"}
 
-# 優先順位（インデックス順: 0が最優先）
 PRIORITY_ORDER = [
     "高松中学校",
     "御成門学園御成門中学校",
@@ -90,13 +78,11 @@ AUTO_BOOK = True
 
 OUTPUT_DIR = Path("output")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-# ======================================================================
 
 JST = timezone(timedelta(hours=9))
 
 
 def is_maintenance_time() -> bool:
-    """JST 00:00 〜 04:59 のシステムメンテナンス時間帯か判定"""
     now_jst = datetime.now(JST)
     return 0 <= now_jst.hour < 5
 
@@ -156,10 +142,6 @@ def get_school_priority(slot: dict) -> tuple:
 
 
 def sort_time_options_by_duration(options: list[tuple[str, str]]) -> list[tuple[str, str, int]]:
-    """
-    プルダウンの各選択肢から利用可能時間（分）を計算し、
-    一番長い時間帯（降順）かつ早い開始時刻（昇順）でソート
-    """
     parsed = []
     for val, text in options:
         times = re.findall(r'(\d{1,2}):(\d{2})', text)
@@ -171,7 +153,6 @@ def sort_time_options_by_duration(options: list[tuple[str, str]]) -> list[tuple[
         else:
             parsed.append((val, text, 0, 9999))
 
-    # duration 降順、start_time 昇順
     parsed.sort(key=lambda x: (-x[2], x[3]))
     return [(item[0], item[1], item[2]) for item in parsed]
 
@@ -232,7 +213,6 @@ def fetch_all_slots_paged(session: requests.Session, form_data: dict, limit_max:
 
 
 def search_district_slots(session: requests.Session, area_bcd: str) -> list[dict]:
-    """指定地区の空き枠を全件取得（ログイン有無を問わずセッション状態を維持）"""
     search_payload = [
         ("date", "5"),
         ("daystart", TARGET_DATE),
@@ -261,17 +241,29 @@ def search_district_slots(session: requests.Session, area_bcd: str) -> list[dict
     return fetch_all_slots_paged(session, form_data)
 
 
-def scan_all_districts(session: requests.Session) -> list[dict]:
-    """全5地区を走査し、対象学校の空き枠を優先度順に並べて返却"""
+def scan_all_districts(session: requests.Session, print_log: bool = True) -> list[dict]:
+    """全5地区を走査し、各地区の走査結果ログを出力"""
     detected_slots = []
     for area_name, area_bcd in AREA_MAP.items():
+        t0 = time.time()
         all_slots = search_district_slots(session, area_bcd)
+        elapsed = (time.time() - t0) * 1000
+
+        target_slots = []
         for slot in all_slots:
             mansion = slot.get("bcdNm", "")
             if is_target_school(mansion):
                 slot["_area_name"] = area_name
                 slot["_area_bcd"] = area_bcd
-                detected_slots.append(slot)
+                target_slots.append(slot)
+
+        if print_log:
+            if target_slots:
+                log(f"[{area_name}地区] ★ 対象学校の空き枠を {len(target_slots)} 件検出！ ({elapsed:.1f}ms)")
+            else:
+                log(f"[{area_name}地区] 対象学校の空きなし (全{len(all_slots)}件走査 / {elapsed:.1f}ms)")
+
+        detected_slots.extend(target_slots)
         time.sleep(0.15)
 
     detected_slots.sort(key=get_school_priority)
@@ -322,7 +314,6 @@ def logout(session: requests.Session):
 
 
 def get_confirm_page(session: requests.Session, candidate_raw: dict, area_bcd: str) -> str:
-    """予約申込画面（および利用規約同意）を経て予約確認HTMLを取得"""
     search_payload = [
         ("date", "5"),
         ("daystart", TARGET_DATE),
@@ -396,7 +387,6 @@ def get_confirm_page(session: requests.Session, candidate_raw: dict, area_bcd: s
 
 
 def build_final_payload(soup_confirm: BeautifulSoup, target_time_val: str, target_time_text: str) -> dict:
-    """確認画面HTMLのinputおよびselect（最長時間帯・目的）を正確に構築"""
     form = soup_confirm.find("form")
     final_payload = {}
     if not form:
@@ -422,14 +412,12 @@ def build_final_payload(soup_confirm: BeautifulSoup, target_time_val: str, targe
             continue
 
         name_lower = name.lower()
-        # 目的プルダウン（バドミントン）の選択
         has_badminton = any("バドミントン" in opt.get_text() for opt in options)
         if has_badminton or any(k in name_lower for k in ["pps", "purpose"]):
             bad_opt = next((opt for opt in options if "バドミントン" in opt.get_text() or TARGET_PURPOSE in opt.get("value", "")), None)
             final_payload[name] = bad_opt.get("value", "") if bad_opt else TARGET_PURPOSE
             continue
 
-        # 時間帯プルダウンの選択（最長枠）
         has_time = any(re.search(r'\d{1,2}[:時]\d{2}', opt.get_text()) for opt in options)
         if has_time or any(k in name_lower for k in ["stime", "etime", "tzone", "timezone"]):
             matched_opt = next((opt for opt in options if opt.get("value") == target_time_val or target_time_text in opt.get_text()), None)
@@ -454,7 +442,6 @@ def build_final_payload(soup_confirm: BeautifulSoup, target_time_val: str, targe
 
 
 def execute_single_booking(session: requests.Session, candidate_raw: dict, area_bcd: str) -> bool:
-    """プルダウン内で一番長い時間帯枠を最優先に選定し、1枠の確定処理を実行"""
     mansion = candidate_raw.get("bcdNm", "")
     facility = candidate_raw.get("icdNm", "")
     use_date = str(candidate_raw.get("useYmd", ""))
@@ -475,7 +462,6 @@ def execute_single_booking(session: requests.Session, candidate_raw: dict, area_
 
     soup_confirm = BeautifulSoup(confirm_html, "html.parser")
 
-    # 時間帯プルダウンの検出と利用時間ソート
     raw_time_options = []
     for sel in soup_confirm.find_all("select"):
         opts = sel.find_all("option")
@@ -488,7 +474,6 @@ def execute_single_booking(session: requests.Session, candidate_raw: dict, area_
             raw_time_options = valid_opts
             break
 
-    # プルダウンが存在すれば最長枠を優先ソート、無ければ元データ枠を使用
     if raw_time_options:
         sorted_opts = sort_time_options_by_duration(raw_time_options)
         target_val, target_text, duration_min = sorted_opts[0]
@@ -553,10 +538,9 @@ def main():
     try:
         session.get(INDEX_URL, timeout=10)
 
-        # 1. まず未ログインのまま全地区を高速走査（平常時ログゼロ）
-        initial_slots = scan_all_districts(session)
+        # 1. 未ログインで全5地区を高速走査（地区ごとのログ出力）
+        initial_slots = scan_all_districts(session, print_log=True)
 
-        # 2. 空き枠が1件もなければ、ログイン処理を一切行わずに終了
         if not initial_slots:
             log("=> 全地区で対象学校の空き枠はありませんでした。ログインせずに巡回を終了します。")
             return
@@ -575,7 +559,6 @@ def main():
             candidate_lines.append(f"- {info_line}")
         log("=" * 70)
 
-        # 3. 夜間メンテナンス時間帯（00:00〜05:00）の判定と待機
         if is_maintenance_time():
             now_jst = datetime.now(JST)
             target_0500 = now_jst.replace(hour=5, minute=0, second=3, microsecond=0)
@@ -600,21 +583,18 @@ def main():
 
             log("=> 05:00 を迎えました！ メンテ明け即時予約処理を開始します。")
 
-        # 4. ログイン実行
         if not login(session):
             return
         logged_in = True
 
-        # 5. 【動的再巡回予約ループ】（最大5枠まで連続取得）
         MAX_BOOKINGS = 5
         booked_count = 0
         failed_slot_keys = set()
 
         for loop_idx in range(1, MAX_BOOKINGS + 1):
             log(f"\n--- [予約ラウンド {loop_idx}/{MAX_BOOKINGS}] 最新の空き枠状況を再巡回中... ---")
-            current_slots = scan_all_districts(session)
+            current_slots = scan_all_districts(session, print_log=False)
 
-            # すでに失敗した枠を除外
             valid_slots = []
             for s in current_slots:
                 key = (str(s.get("useYmd")), str(s.get("bcd")), str(s.get("icd")), str(s.get("sTime")))
@@ -629,7 +609,6 @@ def main():
             slot_key = (str(target_slot.get("useYmd")), str(target_slot.get("bcd")), str(target_slot.get("icd")), str(target_slot.get("sTime")))
             area_bcd = target_slot["_area_bcd"]
 
-            # 最優先の1枠（最長枠）を予約実行
             success = execute_single_booking(session, target_slot, area_bcd)
             if success:
                 booked_count += 1
