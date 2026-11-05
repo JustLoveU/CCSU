@@ -15,6 +15,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 import requests
+from requests.adapters import HTTPAdapter
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
@@ -51,13 +52,12 @@ TARGET_WEEKDAYS = "3,5,6,7,9"           # 水,金,土,日,祝
 TARGET_PURPOSE = "31000000_31010600"   # バドミントン
 APPLY_NUM = "10"
 
-# 対象校が存在する地区のみを定義
+# 対象校が存在する2地区のみ
 ALL_AREA_MAP = {
     "大崎": "1300_0",
     "荏原": "1100_0"
 }
 
-# 監視対象校（全7校）
 TARGET_MANSIONS = {
     "第三日野小学校",
     "第四日野小学校",
@@ -77,8 +77,8 @@ JST = timezone(timedelta(hours=9))
 
 
 def is_maintenance_time() -> bool:
-    now_jst = datetime.now(JST)
-    return 0 <= now_jst.hour < 5
+    """JST 00:00 〜 04:59 のシステムメンテナンス時間帯か判定"""
+    return 0 <= datetime.now(JST).hour < 5
 
 
 def get_start_date() -> str:
@@ -110,11 +110,10 @@ def send_mail(subject: str, body: str):
     msg.attach(MIMEText(body, "plain", "utf-8"))
 
     try:
-        log(f"メール発報中 ({SMTP_HOST}:{SMTP_PORT}) -> {MAIL_TO}")
-        with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=15) as server:
+        with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=10) as server:
             server.login(SMTP_USER, SMTP_PASS)
             server.send_message(msg)
-        log("=> ★ メールを送信しました！")
+        log("=> ★ メール送信完了！")
     except Exception as e:
         log(f"【エラー】メール送信失敗: {e}")
 
@@ -177,7 +176,7 @@ def fetch_all_slots_paged(session: requests.Session, form_data: dict, limit_max:
         form_data["offset"] = offset
         encoded = urllib.parse.urlencode(form_data, doseq=True)
 
-        r_ajax = session.post(AJAX_URL, data=encoded, headers=headers, timeout=15)
+        r_ajax = session.post(AJAX_URL, data=encoded, headers=headers, timeout=10)
         r_ajax.encoding = "cp932"
 
         try:
@@ -225,9 +224,9 @@ def search_district_slots(session: requests.Session, area_bcd: str) -> list[dict
     for w in TARGET_WEEKDAYS.split(","):
         search_payload.append(("dayofweek", w))
 
-    session.post(SEARCH_URL, data=search_payload, timeout=15)
+    session.post(SEARCH_URL, data=search_payload, timeout=10)
 
-    r_daily = session.post(DAILY_URL, data={"displayNo": "prwrc2000"}, timeout=15)
+    r_daily = session.post(DAILY_URL, data={"displayNo": "prwrc2000"}, timeout=10)
     r_daily.encoding = "cp932"
 
     form_data = extract_form_data(r_daily.text)
@@ -238,7 +237,6 @@ def search_district_slots(session: requests.Session, area_bcd: str) -> list[dict
 
 
 def scan_specified_districts(session: requests.Session, target_areas: dict, print_log: bool = True) -> list[dict]:
-    """指定された地区（大崎・荏原）のみを走査し、当月枠のみを抽出"""
     detected_slots = []
     for area_name, area_bcd in target_areas.items():
         t0 = time.time()
@@ -249,7 +247,6 @@ def scan_specified_districts(session: requests.Session, target_areas: dict, prin
         for slot in all_slots:
             mansion = slot.get("bcdNm", "")
             use_ymd = str(slot.get("useYmd", ""))
-            # 対象校 かつ 【当月枠】 のみ
             if is_target_school(mansion) and is_current_month(use_ymd):
                 slot["_area_name"] = area_name
                 slot["_area_bcd"] = area_bcd
@@ -262,7 +259,6 @@ def scan_specified_districts(session: requests.Session, target_areas: dict, prin
                 log(f"[{area_name}地区] 対象校の当月空きなし (全{len(all_slots)}件走査 / {elapsed:.1f}ms)")
 
         detected_slots.extend(target_slots)
-        time.sleep(0.15)
 
     detected_slots.sort(key=get_slot_priority)
     return detected_slots
@@ -271,7 +267,7 @@ def scan_specified_districts(session: requests.Session, target_areas: dict, prin
 def login(session: requests.Session) -> bool:
     log("▶ 品川区システムへ認証ログインを実行します...")
 
-    r = session.post(LOGIN_PAGE_URL, data={"displayNo": "pawab2000"}, timeout=15)
+    r = session.post(LOGIN_PAGE_URL, data={"displayNo": "pawab2000"}, timeout=10)
     r.encoding = "cp932"
     soup = BeautifulSoup(r.text, "html.parser")
 
@@ -288,7 +284,7 @@ def login(session: requests.Session) -> bool:
     for ch in PASSWORD:
         payload.append(("loginCharPass", ch))
 
-    r_auth = session.post(LOGIN_URL, data=payload, timeout=15)
+    r_auth = session.post(LOGIN_URL, data=payload, timeout=10)
     r_auth.encoding = "cp932"
 
     if "ログアウト" in r_auth.text:
@@ -304,8 +300,7 @@ def login(session: requests.Session) -> bool:
 
 def logout(session: requests.Session):
     try:
-        log("ログアウトを実行中...")
-        session.post(LOGOUT_URL, data={"displayNo": "pawab2000"}, timeout=10)
+        session.post(LOGOUT_URL, data={"displayNo": "pawab2000"}, timeout=5)
         log("=> ログアウト完了（セッション破棄）")
     except Exception as e:
         log(f"ログアウト通信エラー: {e}")
@@ -328,8 +323,8 @@ def get_confirm_page(session: requests.Session, candidate_raw: dict, area_bcd: s
     for w in TARGET_WEEKDAYS.split(","):
         search_payload.append(("dayofweek", w))
 
-    session.post(SEARCH_URL, data=search_payload, timeout=15)
-    r_daily = session.post(DAILY_URL, data={"displayNo": "prwrc2000"}, timeout=15)
+    session.post(SEARCH_URL, data=search_payload, timeout=10)
+    r_daily = session.post(DAILY_URL, data={"displayNo": "prwrc2000"}, timeout=10)
     r_daily.encoding = "cp932"
 
     soup_daily = BeautifulSoup(r_daily.text, "html.parser")
@@ -339,7 +334,7 @@ def get_confirm_page(session: requests.Session, candidate_raw: dict, area_bcd: s
         "date": "4",
         "daystart": start_date,
         "days": TARGET_DAYS,
-        "dayofweekClearFlg": "0",
+        "dayofweekClearFlg", "0",
         "timezoneClearFlg": "0",
         "selectAreaBcd": area_bcd,
         "selectIcd": "",
@@ -368,7 +363,7 @@ def get_confirm_page(session: requests.Session, candidate_raw: dict, area_bcd: s
         "User-Agent": "Mozilla/5.0"
     }
 
-    r_apply = session.post(RESERVE_APPLY_URL, data=apply_payload, headers=headers, timeout=20)
+    r_apply = session.post(RESERVE_APPLY_URL, data=apply_payload, headers=headers, timeout=12)
     r_apply.encoding = "cp932"
     current_html = r_apply.text
 
@@ -377,7 +372,7 @@ def get_confirm_page(session: requests.Session, candidate_raw: dict, area_bcd: s
         agree_payload = {tag.get("name"): tag.get("value", "") for tag in soup_agree.find_all("input") if tag.get("name")}
         agree_payload["ruleFg"] = "1"
 
-        r_agree = session.post(RESERVE_AGREEMENT_URL, data=agree_payload, headers=headers, timeout=20)
+        r_agree = session.post(RESERVE_AGREEMENT_URL, data=agree_payload, headers=headers, timeout=12)
         r_agree.encoding = "cp932"
         current_html = r_agree.text
 
@@ -490,7 +485,7 @@ def execute_single_booking(session: requests.Session, candidate_raw: dict, area_
         "User-Agent": "Mozilla/5.0"
     }
 
-    r_final = session.post(RESERVE_CONFIRM_URL, data=final_payload, headers=headers, timeout=20)
+    r_final = session.post(RESERVE_CONFIRM_URL, data=final_payload, headers=headers, timeout=12)
     r_final.encoding = "cp932"
     final_html = r_final.text
 
@@ -529,7 +524,6 @@ def parse_args():
 def main():
     args = parse_args()
 
-    # 巡回地区の設定（CLI引数で単一地区が指定されていればそれを使用、未指定なら両地区）
     if args.area and args.area in ALL_AREA_MAP:
         target_areas = {args.area: ALL_AREA_MAP[args.area]}
     else:
@@ -537,7 +531,7 @@ def main():
 
     start_date = get_start_date()
     cur_ym = get_current_month_prefix()
-    log("=== 品川区学校施設 巡回ボット 起動（当月枠限定・最長枠優先版） ===")
+    log("=== 品川区学校施設 高速巡回ボット 起動（当月枠限定） ===")
     log(f"検索開始日: {start_date} / 対象月: {cur_ym[:4]}年{cur_ym[4:]}月 / 設定人数: {APPLY_NUM}人")
     log(f"巡回地区: {', '.join(target_areas.keys())} / 監視対象校（全{len(TARGET_MANSIONS)}校）: {', '.join(sorted(TARGET_MANSIONS))}")
 
@@ -546,6 +540,8 @@ def main():
         return
 
     session = requests.Session()
+    adapter = HTTPAdapter(pool_connections=10, pool_maxsize=10, max_retries=1)
+    session.mount("https://", adapter)
     session.headers.update({
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
         "Referer": INDEX_URL,
@@ -555,12 +551,11 @@ def main():
     logged_in = False
 
     try:
-        session.get(INDEX_URL, timeout=10)
+        session.get(INDEX_URL, timeout=8)
 
         # 1. 未ログインで指定地区（大崎・荏原）を高速走査（当月枠のみ抽出＆地区ログ出力）
         initial_slots = scan_specified_districts(session, target_areas, print_log=True)
 
-        # 2. 当月の対象枠がなければ、ログイン処理を一切行わずに終了（監査ログゼロ）
         if not initial_slots:
             log("=> 対象校の【当月】空き枠はありませんでした。ログインせずに巡回を終了します。")
             return
@@ -579,37 +574,29 @@ def main():
             candidate_lines.append(f"- {info_line}")
         log("=" * 70)
 
-        # 3. 夜間メンテナンス判定
+        # 2. 夜間メンテナンス判定（待機せず速報メールを送って即終了）
         if is_maintenance_time():
-            now_jst = datetime.now(JST)
-            target_0500 = now_jst.replace(hour=5, minute=0, second=3, microsecond=0)
-            wait_seconds = (target_0500 - now_jst).total_seconds()
+            log("【夜間メンテナンス時間帯 (JST 00:00〜05:00)】")
+            log("=> スリープ待機は行いません。速報メールを送信し、次回05:01定期便に予約を委ねて即終了します。")
 
-            log(f"【夜間メンテナンス時間帯検知 (JST {now_jst.strftime('%H:%M:%S')})】")
-            log(f"=> メンテ明け (05:00:03) まで {int(wait_seconds)} 秒間待機して即時予約を狙います。")
-
-            mail_subject = f"【速報・待機中】品川区学校施設に空き枠検知 (メンテ明け05:00に自動予約実行予定)"
+            mail_subject = f"【速報】品川区学校施設に当月枠検知 (メンテ明け05:01定期便で自動予約試行予定)"
             mail_body = (
                 f"品川区施設予約システムにて対象校の当月空き枠を検知しました。\n"
-                f"現在システム夜間メンテナンス中のため、スクリプトは 05:00:03 まで待機し、\n"
-                f"メンテ明けと同時に自動予約を試みます。\n\n"
+                f"現在システム夜間メンテナンス中のため、予約処理は行わず即終了します。\n"
+                f"朝05:01の定期実行時に枠が残っていれば自動予約されます。\n\n"
                 f"■ 検出された候補一覧:\n"
                 + "\n".join(candidate_lines) + "\n\n"
-                f"検知時刻: {now_jst.strftime('%Y-%m-%d %H:%M:%S')}"
+                f"検知時刻: {datetime.now(JST).strftime('%Y-%m-%d %H:%M:%S')}"
             )
             send_mail(mail_subject, mail_body)
+            return
 
-            if wait_seconds > 0:
-                time.sleep(wait_seconds)
-
-            log("=> 05:00 を迎えました！ メンテ明け即時予約処理を開始します。")
-
-        # 4. 当月枠が存在する場合のみログイン実行
+        # 3. 通常時間帯: ログイン実行
         if not login(session):
             return
         logged_in = True
 
-        # 5. 【動的再巡回予約ループ】
+        # 4. 【高速・動的再巡回予約ループ】
         MAX_BOOKINGS = 5
         booked_count = 0
         failed_slot_keys = set()
@@ -635,12 +622,12 @@ def main():
             success = execute_single_booking(session, target_slot, area_bcd)
             if success:
                 booked_count += 1
-                log("=> 予約完了！ 最新台帳を確認するため、1.5秒後に次ラウンドの再巡回へ進みます。")
-                time.sleep(1.5)
+                log("=> 予約完了！ 次枠の確認のため再巡回します。")
+                time.sleep(0.6)
             else:
                 log("=> この枠の確定に失敗したため、次回巡回から除外して別枠を狙います。")
                 failed_slot_keys.add(slot_key)
-                time.sleep(1.0)
+                time.sleep(0.5)
 
         log(f"\n=== 予約処理完了: 合計 {booked_count} 件の予約を確定しました ===")
 
