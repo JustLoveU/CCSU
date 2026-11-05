@@ -50,7 +50,7 @@ TARGET_DATE = (datetime.now() + timedelta(days=6)).strftime("%Y-%m-%d")
 TARGET_DAYS = "31"
 TARGET_WEEKDAYS = "3,5,6,7,9"           # 水,金,土,日,祝
 TARGET_PURPOSE = "2010_2010040"         # バドミントン
-APPLY_NUM = "10"                        # 利用人数: 10人に変更
+APPLY_NUM = "10"                        # 利用人数: 10人
 
 # 港区 5地区コード
 AREA_MAP = {
@@ -155,6 +155,27 @@ def get_school_priority(slot: dict) -> tuple:
     return (priority_score, use_date, start_time)
 
 
+def sort_time_options_by_duration(options: list[tuple[str, str]]) -> list[tuple[str, str, int]]:
+    """
+    プルダウンの各選択肢から利用可能時間（分）を計算し、
+    一番長い時間帯（降順）かつ早い開始時刻（昇順）でソート
+    """
+    parsed = []
+    for val, text in options:
+        times = re.findall(r'(\d{1,2}):(\d{2})', text)
+        if len(times) >= 2:
+            sh, sm = int(times[0][0]), int(times[0][1])
+            eh, em = int(times[1][0]), int(times[1][1])
+            duration = (eh * 60 + em) - (sh * 60 + sm)
+            parsed.append((val, text, duration, sh * 60 + sm))
+        else:
+            parsed.append((val, text, 0, 9999))
+
+    # duration 降順、start_time 昇順
+    parsed.sort(key=lambda x: (-x[2], x[3]))
+    return [(item[0], item[1], item[2]) for item in parsed]
+
+
 def extract_form_data(html: str) -> dict:
     m = re.search(r'var formData = (\{.*?\});', html, re.S)
     if not m:
@@ -210,7 +231,8 @@ def fetch_all_slots_paged(session: requests.Session, form_data: dict, limit_max:
     return results
 
 
-def search_unlogged_district(session: requests.Session, area_bcd: str) -> list[dict]:
+def search_district_slots(session: requests.Session, area_bcd: str) -> list[dict]:
+    """指定地区の空き枠を全件取得（ログイン有無を問わずセッション状態を維持）"""
     search_payload = [
         ("date", "5"),
         ("daystart", TARGET_DATE),
@@ -239,8 +261,25 @@ def search_unlogged_district(session: requests.Session, area_bcd: str) -> list[d
     return fetch_all_slots_paged(session, form_data)
 
 
+def scan_all_districts(session: requests.Session) -> list[dict]:
+    """全5地区を走査し、対象学校の空き枠を優先度順に並べて返却"""
+    detected_slots = []
+    for area_name, area_bcd in AREA_MAP.items():
+        all_slots = search_district_slots(session, area_bcd)
+        for slot in all_slots:
+            mansion = slot.get("bcdNm", "")
+            if is_target_school(mansion):
+                slot["_area_name"] = area_name
+                slot["_area_bcd"] = area_bcd
+                detected_slots.append(slot)
+        time.sleep(0.15)
+
+    detected_slots.sort(key=get_school_priority)
+    return detected_slots
+
+
 def login(session: requests.Session) -> bool:
-    log("▶ 対象学校の空き枠を検知したため、認証ログインを実行します...")
+    log("▶ 認証ログインを実行します...")
 
     r = session.post(LOGIN_PAGE_URL, data={"displayNo": "pawab2000"}, timeout=15)
     r.encoding = "cp932"
@@ -282,20 +321,8 @@ def logout(session: requests.Session):
         log(f"ログアウト通信エラー: {e}")
 
 
-def execute_booking(session: requests.Session, candidate_raw: dict, area_bcd: str) -> bool:
-    mansion = candidate_raw.get("bcdNm", "")
-    facility = candidate_raw.get("icdNm", "")
-    use_date = str(candidate_raw.get("useYmd", ""))
-    date_str = f"{use_date[:4]}-{use_date[4:6]}-{use_date[6:8]}"
-    time_str = f"{candidate_raw.get('sJTime2', '')}〜{candidate_raw.get('eJTime2', '')}"
-    slot_info = f"{date_str} {time_str} | {mansion} ({facility})"
-
-    log(f"★ 予約手続きを開始: {slot_info}")
-
-    if not AUTO_BOOK:
-        log("【安全確認モード】AUTO_BOOK=False のため予約確定POSTはスキップします。")
-        return False
-
+def get_confirm_page(session: requests.Session, candidate_raw: dict, area_bcd: str) -> str:
+    """予約申込画面（および利用規約同意）を経て予約確認HTMLを取得"""
     search_payload = [
         ("date", "5"),
         ("daystart", TARGET_DATE),
@@ -326,7 +353,7 @@ def execute_booking(session: requests.Session, candidate_raw: dict, area_bcd: st
         "dayofweekClearFlg": "0",
         "timezoneClearFlg": "0",
         "selectAreaBcd": area_bcd,
-        "selectIcd": "",
+        "selectIcd", "",
         "selectPpsClPpscd": TARGET_PURPOSE,
         "selectUseYmd": str(candidate_raw.get("useYmd", "")),
         "selectBldCd": str(candidate_raw.get("bcd", "")),
@@ -365,24 +392,120 @@ def execute_booking(session: requests.Session, candidate_raw: dict, area_bcd: st
         r_agree.encoding = "cp932"
         current_html = r_agree.text
 
-    if "確認" not in current_html and "予約" not in current_html:
-        log(f"【エラー】『{mansion}』の予約確認画面へ進めませんでした。")
-        return False
+    return current_html
 
-    soup_confirm = BeautifulSoup(current_html, "html.parser")
-    final_payload = {tag.get("name"): tag.get("value", "") for tag in soup_confirm.find_all("input") if tag.get("name")}
+
+def build_final_payload(soup_confirm: BeautifulSoup, target_time_val: str, target_time_text: str) -> dict:
+    """確認画面HTMLのinputおよびselect（最長時間帯・目的）を正確に構築"""
+    form = soup_confirm.find("form")
+    final_payload = {}
+    if not form:
+        return final_payload
+
+    for tag in form.find_all("input"):
+        name = tag.get("name")
+        if not name:
+            continue
+        itype = tag.get("type", "text").lower()
+        if itype in ["checkbox", "radio"]:
+            if tag.has_attr("checked"):
+                final_payload[name] = tag.get("value", "")
+        elif itype not in ["button", "submit", "reset", "image"]:
+            final_payload[name] = tag.get("value", "")
+
+    for sel in form.find_all("select"):
+        name = sel.get("name")
+        if not name:
+            continue
+        options = sel.find_all("option")
+        if not options:
+            continue
+
+        name_lower = name.lower()
+        # 目的プルダウン（バドミントン）の選択
+        has_badminton = any("バドミントン" in opt.get_text() for opt in options)
+        if has_badminton or any(k in name_lower for k in ["pps", "purpose"]):
+            bad_opt = next((opt for opt in options if "バドミントン" in opt.get_text() or TARGET_PURPOSE in opt.get("value", "")), None)
+            final_payload[name] = bad_opt.get("value", "") if bad_opt else TARGET_PURPOSE
+            continue
+
+        # 時間帯プルダウンの選択（最長枠）
+        has_time = any(re.search(r'\d{1,2}[:時]\d{2}', opt.get_text()) for opt in options)
+        if has_time or any(k in name_lower for k in ["stime", "etime", "tzone", "timezone"]):
+            matched_opt = next((opt for opt in options if opt.get("value") == target_time_val or target_time_text in opt.get_text()), None)
+            final_payload[name] = matched_opt.get("value", "") if matched_opt else target_time_val
+            continue
+
+        sel_opt = sel.find("option", selected=True) or options[0]
+        final_payload[name] = sel_opt.get("value", "")
 
     final_payload.update({
         "applyNum": APPLY_NUM,
         "ninzu": APPLY_NUM,
-        "stimeZoneNo": str(candidate_raw.get("tZoneNo", "")),
-        "etimeZoneNo": str(candidate_raw.get("tZoneNo", "")),
-        "ppsCd": str(candidate_raw.get("ppsCd", "")),
-        "ppsdCd": str(candidate_raw.get("ppsClsCd", "")),
         "purpose": TARGET_PURPOSE,
         "displayNo": "prwea1000",
         "selectRsvDetailNo": "0",
     })
+    if target_time_val:
+        final_payload["stimeZoneNo"] = str(target_time_val)
+        final_payload["etimeZoneNo"] = str(target_time_val)
+
+    return final_payload
+
+
+def execute_single_booking(session: requests.Session, candidate_raw: dict, area_bcd: str) -> bool:
+    """プルダウン内で一番長い時間帯枠を最優先に選定し、1枠の確定処理を実行"""
+    mansion = candidate_raw.get("bcdNm", "")
+    facility = candidate_raw.get("icdNm", "")
+    use_date = str(candidate_raw.get("useYmd", ""))
+    date_str = f"{use_date[:4]}-{use_date[4:6]}-{use_date[6:8]}"
+    time_str = f"{candidate_raw.get('sJTime2', '')}〜{candidate_raw.get('eJTime2', '')}"
+    slot_info = f"{date_str} {time_str} | {mansion} ({facility})"
+
+    log(f"★ 予約手続きを開始: {slot_info}")
+
+    if not AUTO_BOOK:
+        log("【安全確認モード】AUTO_BOOK=False のため予約確定POSTはスキップします。")
+        return False
+
+    confirm_html = get_confirm_page(session, candidate_raw, area_bcd)
+    if "確認" not in confirm_html and "予約" not in confirm_html:
+        log(f"【エラー】『{mansion}』の予約確認画面へ進めませんでした。")
+        return False
+
+    soup_confirm = BeautifulSoup(confirm_html, "html.parser")
+
+    # 時間帯プルダウンの検出と利用時間ソート
+    raw_time_options = []
+    for sel in soup_confirm.find_all("select"):
+        opts = sel.find_all("option")
+        valid_opts = [
+            (opt.get("value", ""), opt.get_text(strip=True))
+            for opt in opts
+            if opt.get("value") and opt.get("value") != "0" and "選択" not in opt.get_text()
+        ]
+        if any(re.search(r'\d{1,2}[:時]\d{2}', t) for v, t in valid_opts):
+            raw_time_options = valid_opts
+            break
+
+    # プルダウンが存在すれば最長枠を優先ソート、無ければ元データ枠を使用
+    if raw_time_options:
+        sorted_opts = sort_time_options_by_duration(raw_time_options)
+        target_val, target_text, duration_min = sorted_opts[0]
+        log(f"▶ プルダウン選択肢（全{len(sorted_opts)}個）から【最長時間枠】を選択:")
+        log(f"   ★ 選択枠: 『{target_text}』 (利用時間: {duration_min/60:.1f}時間 / コード: {target_val})")
+    else:
+        target_val = str(candidate_raw.get("tZoneNo", ""))
+        target_text = time_str
+
+    final_payload = build_final_payload(soup_confirm, target_val, target_text)
+
+    headers = {
+        "Referer": DAILY_URL,
+        "Origin": BASE_URL,
+        "Content-Type": "application/x-www-form-urlencoded",
+        "User-Agent": "Mozilla/5.0"
+    }
 
     r_final = session.post(RESERVE_CONFIRM_URL, data=final_payload, headers=headers, timeout=20)
     r_final.encoding = "cp932"
@@ -392,16 +515,16 @@ def execute_booking(session: requests.Session, candidate_raw: dict, area_bcd: st
         rsv_no_match = re.search(r'(?:予約番号|受付番号)[：:\s]*([A-Za-z0-9\-]+)', final_html)
         rsv_no = rsv_no_match.group(1) if rsv_no_match else "画面参照"
 
-        log(f"★★★ 【予約完了】 {mansion} / 予約番号: {rsv_no} ★★★")
+        log(f"★★★ 【予約完了】 {mansion} / 枠: {target_text} / 予約番号: {rsv_no} ★★★")
 
-        mail_subject = f"【予約完了通知】港区学校施設予約が確定しました ({mansion})"
+        mail_subject = f"【予約完了通知】港区学校施設予約が確定しました ({mansion} {target_text})"
         mail_body = (
             f"港区施設予約システムにて自動予約が完了しました。\n\n"
             f"■ 予約内容\n"
             f"- 予約番号: {rsv_no}\n"
             f"- 施設名: {mansion}\n"
             f"- 室場名: {facility}\n"
-            f"- 利用日時: {date_str} {time_str}\n"
+            f"- 利用日時: {date_str} {target_text}\n"
             f"- 利用人数: {APPLY_NUM}人\n"
             f"- 利用目的: バドミントン\n"
             f"- 確定時刻: {datetime.now(JST).strftime('%Y-%m-%d %H:%M:%S')}\n\n"
@@ -415,7 +538,7 @@ def execute_booking(session: requests.Session, candidate_raw: dict, area_bcd: st
 
 
 def main():
-    log("=== 港区学校施設 巡回ボット 起動 ===")
+    log("=== 港区学校施設 巡回ボット 起動（最長枠優先・再巡回ループ版） ===")
     log(f"検索開始日: {TARGET_DATE} / 期間: {TARGET_DAYS}日間 / 設定人数: {APPLY_NUM}人")
 
     session = requests.Session()
@@ -429,42 +552,19 @@ def main():
 
     try:
         session.get(INDEX_URL, timeout=10)
-        all_detected_school_slots = []
 
-        # 1. 未ログインで全5地区を高速巡回・全ページ取得
-        for area_name, area_bcd in AREA_MAP.items():
-            t0 = time.time()
-            all_slots = search_unlogged_district(session, area_bcd)
-            elapsed = (time.time() - t0) * 1000
+        # 1. まず未ログインのまま全地区を高速走査（平常時ログゼロ）
+        initial_slots = scan_all_districts(session)
 
-            target_slots = []
-            for slot in all_slots:
-                mansion = slot.get("bcdNm", "")
-                if is_target_school(mansion):
-                    slot["_area_name"] = area_name
-                    slot["_area_bcd"] = area_bcd
-                    target_slots.append(slot)
-
-            if target_slots:
-                log(f"[{area_name}地区] ★ 対象学校の空き枠を {len(target_slots)} 件検出！ ({elapsed:.1f}ms)")
-                all_detected_school_slots.extend(target_slots)
-            else:
-                log(f"[{area_name}地区] 対象学校の空きなし (全{len(all_slots)}件走査 / {elapsed:.1f}ms)")
-
-            time.sleep(0.2)
-
-        # 2. 対象学校枠が0件なら終了
-        if not all_detected_school_slots:
+        # 2. 空き枠が1件もなければ、ログイン処理を一切行わずに終了
+        if not initial_slots:
             log("=> 全地区で対象学校の空き枠はありませんでした。ログインせずに巡回を終了します。")
             return
 
-        # 3. 優先順位ソート
-        all_detected_school_slots.sort(key=get_school_priority)
-
         candidate_lines = []
         log("=" * 70)
-        log(f"【予約候補リスト（優先順位ソート済: 全 {len(all_detected_school_slots)} 件）】")
-        for rank, s in enumerate(all_detected_school_slots, 1):
+        log(f"【検知候補リスト（優先順位順: 全 {len(initial_slots)} 件）】")
+        for rank, s in enumerate(initial_slots, 1):
             use_d = str(s.get('useYmd', ''))
             d_str = f"{use_d[:4]}-{use_d[4:6]}-{use_d[6:8]}"
             t_str = f"{s.get('sJTime2', '')}〜{s.get('eJTime2', '')}"
@@ -475,50 +575,72 @@ def main():
             candidate_lines.append(f"- {info_line}")
         log("=" * 70)
 
-        # 4. 夜間メンテナンス時間帯（00:00〜05:00）の判定
+        # 3. 夜間メンテナンス時間帯（00:00〜05:00）の判定と待機
         if is_maintenance_time():
             now_jst = datetime.now(JST)
-            # 翌朝（本日）の 05:00:03 JST を計算
             target_0500 = now_jst.replace(hour=5, minute=0, second=3, microsecond=0)
             wait_seconds = (target_0500 - now_jst).total_seconds()
 
             log(f"【夜間メンテナンス時間帯検知 (JST {now_jst.strftime('%H:%M:%S')})】")
-            log(f"=> 対象枠を検知しました。メンテ明け (05:00:03) まで {int(wait_seconds)} 秒間待機します。")
+            log(f"=> メンテ明け (05:00:03) まで {int(wait_seconds)} 秒間待機して即時予約を狙います。")
 
-            # 1. まず事前速報メールを送信
-            mail_subject = f"【速報・待機中】夜間メンテ明け(05:00)に自動予約を実行します ({len(all_detected_school_slots)}件)"
+            mail_subject = f"【速報・待機中】夜間メンテ明け(05:00)に自動予約を実行します ({len(initial_slots)}件)"
             mail_body = (
                 f"港区施設予約システムにて対象学校の空き枠を検知しました。\n"
                 f"現在システムメンテナンス中のため、スクリプトは 05:00:03 まで待機し、\n"
                 f"メンテ明けと同時に自動予約を試みます。\n\n"
-                f"■ 予約予定の候補（最優先枠）:\n"
+                f"■ 検出された候補一覧（優先順位順）:\n"
                 + "\n".join(candidate_lines) + "\n\n"
                 f"検知時刻: {now_jst.strftime('%Y-%m-%d %H:%M:%S')}"
             )
             send_mail(mail_subject, mail_body)
 
-            # 2. 05:00:03 まで待機（最大5時間）
             if wait_seconds > 0:
                 time.sleep(wait_seconds)
 
-            log("=> 05:00 を迎えました！ メンテ明けの即時予約処理を開始します。")
+            log("=> 05:00 を迎えました！ メンテ明け即時予約処理を開始します。")
 
-        # 5. ログインして優先順位順に自動予約（通常時 または 05:00待機明け後）
+        # 4. ログイン実行
         if not login(session):
             return
         logged_in = True
 
-        success_count = 0
-        for slot in all_detected_school_slots:
-            mansion = slot.get("bcdNm", "")
-            area_bcd = slot["_area_bcd"]
+        # 5. 【動的再巡回予約ループ】（最大5枠まで連続取得）
+        MAX_BOOKINGS = 5
+        booked_count = 0
+        failed_slot_keys = set()
 
-            if execute_booking(session, slot, area_bcd):
-                success_count += 1
+        for loop_idx in range(1, MAX_BOOKINGS + 1):
+            log(f"\n--- [予約ラウンド {loop_idx}/{MAX_BOOKINGS}] 最新の空き枠状況を再巡回中... ---")
+            current_slots = scan_all_districts(session)
 
-            time.sleep(1.5)
+            # すでに失敗した枠を除外
+            valid_slots = []
+            for s in current_slots:
+                key = (str(s.get("useYmd")), str(s.get("bcd")), str(s.get("icd")), str(s.get("sTime")))
+                if key not in failed_slot_keys:
+                    valid_slots.append(s)
 
-        log(f"=== 予約処理完了: 合計 {success_count} / {len(all_detected_school_slots)} 件 確定 ===")
+            if not valid_slots:
+                log("=> 対象学校の空き枠がすべて埋まった（または取り切った）ため、予約ループを終了します。")
+                break
+
+            target_slot = valid_slots[0]
+            slot_key = (str(target_slot.get("useYmd")), str(target_slot.get("bcd")), str(target_slot.get("icd")), str(target_slot.get("sTime")))
+            area_bcd = target_slot["_area_bcd"]
+
+            # 最優先の1枠（最長枠）を予約実行
+            success = execute_single_booking(session, target_slot, area_bcd)
+            if success:
+                booked_count += 1
+                log("=> 予約完了！ 最新台帳を確認するため、1.5秒後に次ラウンドの再巡回へ進みます。")
+                time.sleep(1.5)
+            else:
+                log("=> この枠の確定に失敗したため、次回巡回から除外して別枠を狙います。")
+                failed_slot_keys.add(slot_key)
+                time.sleep(1.0)
+
+        log(f"\n=== 予約処理完了: 合計 {booked_count} 件の予約を確定しました ===")
 
     finally:
         if logged_in:
