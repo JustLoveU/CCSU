@@ -6,6 +6,7 @@ import sys
 import re
 import json
 import time
+import argparse
 import smtplib
 import urllib.parse
 from datetime import datetime, timedelta, timezone
@@ -36,33 +37,27 @@ RESERVE_APPLY_URL = f"{BASE_URL}/rsvWOpeReservedApplyAction.do"
 RESERVE_AGREEMENT_URL = f"{BASE_URL}/rsvWInstUseruleRsvApplyAction.do"
 RESERVE_CONFIRM_URL = f"{BASE_URL}/rsvWInstRsvApplyAction.do"
 
-# 認証情報（品川区用環境変数）
 USER_ID = os.getenv("SHINAGAWA_USER_ID", "")
 PASSWORD = os.getenv("SHINAGAWA_PASSWORD", "")
 
-# メール設定
 SMTP_HOST = os.getenv("SMTP_HOST", "smtp.mail.yahoo.co.jp")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "465"))
 SMTP_USER = os.getenv("SMTP_USER", "tl2019@yahoo.co.jp")
 SMTP_PASS = os.getenv("SMTP_PASS", "")
 MAIL_TO = os.getenv("MAIL_TO", "tl2019@yahoo.co.jp")
 
-# 予約条件
 TARGET_DAYS = "31"
 TARGET_WEEKDAYS = "3,5,6,7,9"           # 水,金,土,日,祝
-TARGET_PURPOSE = "31000000_31010600"   # 品川区コード: バドミントン
-APPLY_NUM = "10"                        # 利用人数: 10人
+TARGET_PURPOSE = "31000000_31010600"   # バドミントン
+APPLY_NUM = "10"
 
-# 品川区 地区コード（対象校が存在する全地区を巡回）
-AREA_MAP = {
+# 対象校が存在する地区のみを定義
+ALL_AREA_MAP = {
     "大崎": "1300_0",
-    "荏原": "1100_0",
-    "品川": "1400_0",
-    "大井": "1200_0",
-    "八潮": "1500_0"
+    "荏原": "1100_0"
 }
 
-# ==================== 対象施設ホワイトリスト ====================
+# 監視対象校（全7校）
 TARGET_MANSIONS = {
     "第三日野小学校",
     "第四日野小学校",
@@ -77,20 +72,22 @@ AUTO_BOOK = True
 
 OUTPUT_DIR = Path("output")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-# ======================================================================
 
 JST = timezone(timedelta(hours=9))
 
 
 def is_maintenance_time() -> bool:
-    """JST 00:00 〜 04:59 のシステムメンテナンス時間帯か判定"""
     now_jst = datetime.now(JST)
     return 0 <= now_jst.hour < 5
 
 
 def get_start_date() -> str:
-    """検索開始日（当日日付 JST）"""
     return datetime.now(JST).strftime("%Y-%m-%d")
+
+
+def get_current_month_prefix() -> str:
+    """当月プレフィックス（例: '202611'）"""
+    return datetime.now(JST).strftime("%Y%m")
 
 
 def log(msg: str):
@@ -123,24 +120,24 @@ def send_mail(subject: str, body: str):
 
 
 def is_target_school(name: str) -> bool:
-    """指定の7校のみに限定"""
     if not name:
         return False
     return any(target in name for target in TARGET_MANSIONS)
 
 
+def is_current_month(use_ymd: str) -> bool:
+    """当月（YYYYMM）の枠であるかを判定（翌月以降は除外）"""
+    cur_ym = get_current_month_prefix()
+    return str(use_ymd).startswith(cur_ym)
+
+
 def get_slot_priority(slot: dict) -> tuple:
-    """利用日が近い順・開始時刻が早い順でソート"""
     use_date = str(slot.get("useYmd", "99999999"))
     start_time = str(slot.get("sTime", "9999"))
     return (use_date, start_time)
 
 
 def sort_time_options_by_duration(options: list[tuple[str, str]]) -> list[tuple[str, str, int]]:
-    """
-    プルダウンの各選択肢から利用可能時間（分）を計算し、
-    最も長い時間帯（降順）かつ早い開始時刻（昇順）でソート
-    """
     parsed = []
     for val, text in options:
         times = re.findall(r'(\d{1,2}):(\d{2})', text)
@@ -240,16 +237,31 @@ def search_district_slots(session: requests.Session, area_bcd: str) -> list[dict
     return fetch_all_slots_paged(session, form_data)
 
 
-def scan_all_districts(session: requests.Session) -> list[dict]:
+def scan_specified_districts(session: requests.Session, target_areas: dict, print_log: bool = True) -> list[dict]:
+    """指定された地区（大崎・荏原）のみを走査し、当月枠のみを抽出"""
     detected_slots = []
-    for area_name, area_bcd in AREA_MAP.items():
+    for area_name, area_bcd in target_areas.items():
+        t0 = time.time()
         all_slots = search_district_slots(session, area_bcd)
+        elapsed = (time.time() - t0) * 1000
+
+        target_slots = []
         for slot in all_slots:
             mansion = slot.get("bcdNm", "")
-            if is_target_school(mansion):
+            use_ymd = str(slot.get("useYmd", ""))
+            # 対象校 かつ 【当月枠】 のみ
+            if is_target_school(mansion) and is_current_month(use_ymd):
                 slot["_area_name"] = area_name
                 slot["_area_bcd"] = area_bcd
-                detected_slots.append(slot)
+                target_slots.append(slot)
+
+        if print_log:
+            if target_slots:
+                log(f"[{area_name}地区] ★ 対象校の【当月】空き枠を {len(target_slots)} 件検出！ ({elapsed:.1f}ms)")
+            else:
+                log(f"[{area_name}地区] 対象校の当月空きなし (全{len(all_slots)}件走査 / {elapsed:.1f}ms)")
+
+        detected_slots.extend(target_slots)
         time.sleep(0.15)
 
     detected_slots.sort(key=get_slot_priority)
@@ -330,7 +342,7 @@ def get_confirm_page(session: requests.Session, candidate_raw: dict, area_bcd: s
         "dayofweekClearFlg": "0",
         "timezoneClearFlg": "0",
         "selectAreaBcd": area_bcd,
-        "selectIcd": "",
+        "selectIcd", "",
         "selectPpsClPpscd": TARGET_PURPOSE,
         "selectUseYmd": str(candidate_raw.get("useYmd", "")),
         "selectBldCd": str(candidate_raw.get("bcd", "")),
@@ -508,11 +520,26 @@ def execute_single_booking(session: requests.Session, candidate_raw: dict, area_
         return False
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--area", default="", help="巡回地区（大崎 または 荏原）。未指定時は両地区を巡回")
+    return parser.parse_known_args()[0]
+
+
 def main():
+    args = parse_args()
+
+    # 巡回地区の設定（CLI引数で単一地区が指定されていればそれを使用、未指定なら両地区）
+    if args.area and args.area in ALL_AREA_MAP:
+        target_areas = {args.area: ALL_AREA_MAP[args.area]}
+    else:
+        target_areas = ALL_AREA_MAP
+
     start_date = get_start_date()
-    log("=== 品川区学校施設 巡回ボット 起動（最長枠優先・再巡回ループ版） ===")
-    log(f"検索開始日: {start_date} / 期間: {TARGET_DAYS}日間 / 設定人数: {APPLY_NUM}人")
-    log(f"監視対象校（全{len(TARGET_MANSIONS)}校）: {', '.join(sorted(TARGET_MANSIONS))}")
+    cur_ym = get_current_month_prefix()
+    log("=== 品川区学校施設 巡回ボット 起動（当月枠限定・最長枠優先版） ===")
+    log(f"検索開始日: {start_date} / 対象月: {cur_ym[:4]}年{cur_ym[4:]}月 / 設定人数: {APPLY_NUM}人")
+    log(f"巡回地区: {', '.join(target_areas.keys())} / 監視対象校（全{len(TARGET_MANSIONS)}校）: {', '.join(sorted(TARGET_MANSIONS))}")
 
     if not USER_ID or not PASSWORD:
         log("【エラー】SHINAGAWA_USER_ID または SHINAGAWA_PASSWORD が設定されていません。")
@@ -530,12 +557,12 @@ def main():
     try:
         session.get(INDEX_URL, timeout=10)
 
-        # 1. 未ログインで高速走査（平常時ログゼロ）
-        initial_slots = scan_all_districts(session)
+        # 1. 未ログインで指定地区（大崎・荏原）を高速走査（当月枠のみ抽出＆地区ログ出力）
+        initial_slots = scan_specified_districts(session, target_areas, print_log=True)
 
-        # 2. 対象枠がなければ終了
+        # 2. 当月の対象枠がなければ、ログイン処理を一切行わずに終了（監査ログゼロ）
         if not initial_slots:
-            log("=> 対象校の空き枠はありませんでした。ログインせずに巡回を終了します。")
+            log("=> 対象校の【当月】空き枠はありませんでした。ログインせずに巡回を終了します。")
             return
 
         candidate_lines = []
@@ -552,7 +579,7 @@ def main():
             candidate_lines.append(f"- {info_line}")
         log("=" * 70)
 
-        # 3. 夜間メンテナンス時間帯（00:00〜05:00）の判定とスリープ待機
+        # 3. 夜間メンテナンス判定
         if is_maintenance_time():
             now_jst = datetime.now(JST)
             target_0500 = now_jst.replace(hour=5, minute=0, second=3, microsecond=0)
@@ -563,7 +590,7 @@ def main():
 
             mail_subject = f"【速報・待機中】品川区学校施設に空き枠検知 (メンテ明け05:00に自動予約実行予定)"
             mail_body = (
-                f"品川区施設予約システムにて対象校の空き枠を検知しました。\n"
+                f"品川区施設予約システムにて対象校の当月空き枠を検知しました。\n"
                 f"現在システム夜間メンテナンス中のため、スクリプトは 05:00:03 まで待機し、\n"
                 f"メンテ明けと同時に自動予約を試みます。\n\n"
                 f"■ 検出された候補一覧:\n"
@@ -577,19 +604,19 @@ def main():
 
             log("=> 05:00 を迎えました！ メンテ明け即時予約処理を開始します。")
 
-        # 4. ログイン実行
+        # 4. 当月枠が存在する場合のみログイン実行
         if not login(session):
             return
         logged_in = True
 
-        # 5. 【動的再巡回予約ループ】（最大5枠まで連続取得）
+        # 5. 【動的再巡回予約ループ】
         MAX_BOOKINGS = 5
         booked_count = 0
         failed_slot_keys = set()
 
         for loop_idx in range(1, MAX_BOOKINGS + 1):
             log(f"\n--- [予約ラウンド {loop_idx}/{MAX_BOOKINGS}] 最新の空き枠状況を再巡回中... ---")
-            current_slots = scan_all_districts(session)
+            current_slots = scan_specified_districts(session, target_areas, print_log=False)
 
             valid_slots = []
             for s in current_slots:
@@ -598,7 +625,7 @@ def main():
                     valid_slots.append(s)
 
             if not valid_slots:
-                log("=> 対象校の空き枠がすべて埋まった（または取り切った）ため、予約ループを終了します。")
+                log("=> 対象校の当月空き枠がすべて埋まった（または取り切った）ため、予約ループを終了します。")
                 break
 
             target_slot = valid_slots[0]
