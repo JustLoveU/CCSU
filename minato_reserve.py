@@ -6,6 +6,7 @@ import sys
 import re
 import json
 import time
+import calendar
 import smtplib
 import urllib.parse
 from datetime import datetime, timedelta, timezone
@@ -44,8 +45,8 @@ SMTP_USER = "tl2019@yahoo.co.jp"
 SMTP_PASS = os.getenv("SMTP_PASS", "")
 MAIL_TO = "tl2019@yahoo.co.jp"
 
-TARGET_DATE = (datetime.now() + timedelta(days=6)).strftime("%Y-%m-%d")
-TARGET_DAYS = "31"
+START_OFFSET_DAYS = 3                   # 検索開始日: 3日先から
+TARGET_DAYS = "31"                      # 1回あたりの検索期間上限（1ヶ月=31日）
 TARGET_WEEKDAYS = "3,5,6,7,9"           # 水,金,土,日,祝
 TARGET_PURPOSE = "2010_2010040"         # バドミントン
 APPLY_NUM = "10"
@@ -62,11 +63,11 @@ ALL_SCHOOLS = {
     "麻布小学校", "南山小学校", "本村小学校", "六本木中学校", "高陵中学校",
     "赤坂学園赤坂小学校", "青山小学校", "青南小学校", "赤坂学園赤坂中学校", "青山中学校",
     "高輪台小学校", "白金小学校", "三田中学校", "高松中学校", "白金の丘学園", "御田小学校（仮校舎）",
-    "芝浦小学校", "芝浜小学校", "港南小学校", "港南中学校", "お台場学園港陽小・中学校",
+    "芝浦小学校", "芝浜小学校", "港南小学校", "港南中学校", 
     "御成門学園御成門小学校", "芝小学校", "赤羽小学校", "御成門学園御成門中学校"
 }
 
-EXCLUDE_SCHOOLS = {"笄小学校", "東町小学校"}
+EXCLUDE_SCHOOLS = {"笄小学校", "お台場学園港陽小・中学校", "東町小学校"}
 
 PRIORITY_ORDER = [
     "高松中学校",
@@ -86,6 +87,42 @@ JST = timezone(timedelta(hours=9))
 def is_maintenance_time() -> bool:
     """JST 00:00 〜 04:59 のシステムメンテナンス時間帯か判定"""
     return 0 <= datetime.now(JST).hour < 5
+
+
+def get_search_windows() -> tuple[list[tuple[str, str]], str, str]:
+    """
+    JST基準で「3日先〜翌月末」までの検索区間リスト（最大2区間）を算出
+    戻り値: ([(daystart, days), ...], start_ymd_str, max_ymd_str)
+    """
+    now_jst = datetime.now(JST)
+    start_dt = now_jst.date() + timedelta(days=START_OFFSET_DAYS)
+
+    # 翌月の末日を算出
+    if now_jst.month == 12:
+        next_year, next_month = now_jst.year + 1, 1
+    else:
+        next_year, next_month = now_jst.year, now_jst.month + 1
+    last_day = calendar.monthrange(next_year, next_month)[1]
+    max_dt = datetime(next_year, next_month, last_day).date()
+
+    start_ymd = start_dt.strftime("%Y%m%d")
+    max_ymd = max_dt.strftime("%Y%m%d")
+
+    if start_dt > max_dt:
+        return [], start_ymd, max_ymd
+
+    windows = []
+    # 第1区間: 3日先から31日間
+    w1_start = start_dt
+    w1_end = w1_start + timedelta(days=30)
+    windows.append((w1_start.strftime("%Y-%m-%d"), TARGET_DAYS))
+
+    # 第1区間の終了日が翌月末に届かない場合、第2区間を追加
+    if w1_end < max_dt:
+        w2_start = w1_end + timedelta(days=1)
+        windows.append((w2_start.strftime("%Y-%m-%d"), TARGET_DAYS))
+
+    return windows, start_ymd, max_ymd
 
 
 def log(msg: str):
@@ -212,11 +249,11 @@ def fetch_all_slots_paged(session: requests.Session, form_data: dict, limit_max:
     return results
 
 
-def search_district_slots(session: requests.Session, area_bcd: str) -> list[dict]:
+def search_district_slots(session: requests.Session, area_bcd: str, daystart: str, days: str) -> list[dict]:
     search_payload = [
         ("date", "5"),
-        ("daystart", TARGET_DATE),
-        ("days", TARGET_DAYS),
+        ("daystart", daystart),
+        ("days", days),
         ("dayofweekClearFlg", "0"),
         ("timezoneClearFlg", "0"),
         ("selectAreaBcd", area_bcd),
@@ -241,28 +278,49 @@ def search_district_slots(session: requests.Session, area_bcd: str) -> list[dict
     return fetch_all_slots_paged(session, form_data)
 
 
-def scan_all_districts(session: requests.Session, print_log: bool = True) -> list[dict]:
+def scan_all_districts(session: requests.Session, windows: list[tuple[str, str]], start_ymd: str, max_ymd: str, print_log: bool = True) -> list[dict]:
+    """全5地区を、算出した検索区間（3日先〜翌月末）で走査"""
     detected_slots = []
+    seen_slot_keys = set()
+
     for area_name, area_bcd in AREA_MAP.items():
         t0 = time.time()
-        all_slots = search_district_slots(session, area_bcd)
-        elapsed = (time.time() - t0) * 1000
+        total_scanned = 0
+        area_target_slots = []
 
-        target_slots = []
-        for slot in all_slots:
-            mansion = slot.get("bcdNm", "")
-            if is_target_school(mansion):
+        for daystart, days in windows:
+            all_slots = search_district_slots(session, area_bcd, daystart, days)
+            total_scanned += len(all_slots)
+
+            for slot in all_slots:
+                use_ymd = str(slot.get("useYmd", ""))
+                # 対象期間（3日先〜翌月末）の範囲外は除外
+                if not use_ymd or use_ymd < start_ymd or use_ymd > max_ymd:
+                    continue
+
+                mansion = slot.get("bcdNm", "")
+                if not is_target_school(mansion):
+                    continue
+
+                slot_key = (use_ymd, str(slot.get("bcd", "")), str(slot.get("icd", "")), str(slot.get("sTime", "")))
+                if slot_key in seen_slot_keys:
+                    continue
+                seen_slot_keys.add(slot_key)
+
                 slot["_area_name"] = area_name
                 slot["_area_bcd"] = area_bcd
-                target_slots.append(slot)
+                slot["_search_daystart"] = daystart
+                area_target_slots.append(slot)
+
+        elapsed = (time.time() - t0) * 1000
 
         if print_log:
-            if target_slots:
-                log(f"[{area_name}地区] ★ 対象学校の空き枠を {len(target_slots)} 件検出！ ({elapsed:.1f}ms)")
+            if area_target_slots:
+                log(f"[{area_name}地区] ★ 対象学校の空き枠を {len(area_target_slots)} 件検出！ ({elapsed:.1f}ms)")
             else:
-                log(f"[{area_name}地区] 対象学校の空きなし (全{len(all_slots)}件走査 / {elapsed:.1f}ms)")
+                log(f"[{area_name}地区] 対象学校の空きなし (全{total_scanned}件走査 / {elapsed:.1f}ms)")
 
-        detected_slots.extend(target_slots)
+        detected_slots.extend(area_target_slots)
 
     detected_slots.sort(key=get_school_priority)
     return detected_slots
@@ -311,9 +369,12 @@ def logout(session: requests.Session):
 
 
 def get_confirm_page(session: requests.Session, candidate_raw: dict, area_bcd: str) -> str:
+    # 該当枠が見つかった区間の daystart を使用して整合性を保つ
+    slot_daystart = candidate_raw.get("_search_daystart") or (datetime.now(JST).date() + timedelta(days=START_OFFSET_DAYS)).strftime("%Y-%m-%d")
+
     search_payload = [
         ("date", "5"),
-        ("daystart", TARGET_DATE),
+        ("daystart", slot_daystart),
         ("days", TARGET_DAYS),
         ("dayofweekClearFlg", "0"),
         ("timezoneClearFlg", "0"),
@@ -336,7 +397,7 @@ def get_confirm_page(session: requests.Session, candidate_raw: dict, area_bcd: s
 
     apply_payload.update({
         "date": "5",
-        "daystart": TARGET_DATE,
+        "daystart": slot_daystart,
         "days": TARGET_DAYS,
         "dayofweekClearFlg": "0",
         "timezoneClearFlg": "0",
@@ -520,11 +581,20 @@ def execute_single_booking(session: requests.Session, candidate_raw: dict, area_
 
 
 def main():
+    windows, start_ymd, max_ymd = get_search_windows()
+    start_disp = f"{start_ymd[:4]}-{start_ymd[4:6]}-{start_ymd[6:8]}"
+    max_disp = f"{max_ymd[:4]}-{max_ymd[4:6]}-{max_ymd[6:8]}"
+
     log("=== 港区学校施設 高速巡回ボット 起動 ===")
-    log(f"検索開始日: {TARGET_DATE} / 期間: {TARGET_DAYS}日間 / 設定人数: {APPLY_NUM}人")
+    log(f"対象期間: {start_disp} 〜 {max_disp}（翌月末まで / {len(windows)}区間検索） / 設定人数: {APPLY_NUM}人")
+    for idx, (w_start, w_days) in enumerate(windows, 1):
+        log(f"  └ 検索区間{idx}: {w_start} から {w_days}日間")
+
+    if not windows:
+        log("=> 対象期間が有効範囲外のため終了します。")
+        return
 
     session = requests.Session()
-    # コネクションプーリング最適化
     adapter = HTTPAdapter(pool_connections=10, pool_maxsize=10, max_retries=1)
     session.mount("https://", adapter)
     session.headers.update({
@@ -538,8 +608,8 @@ def main():
     try:
         session.get(INDEX_URL, timeout=8)
 
-        # 1. 未ログインで全5地区を高速巡回
-        initial_slots = scan_all_districts(session, print_log=True)
+        # 1. 未ログインで全5地区を高速巡回（3日先〜翌月末）
+        initial_slots = scan_all_districts(session, windows, start_ymd, max_ymd, print_log=True)
 
         if not initial_slots:
             log("=> 全地区で対象学校の空き枠はありませんでした。ログインせずに巡回を終了します。")
@@ -588,7 +658,7 @@ def main():
 
         for loop_idx in range(1, MAX_BOOKINGS + 1):
             log(f"\n--- [予約ラウンド {loop_idx}/{MAX_BOOKINGS}] 最新の空き枠状況を再巡回中... ---")
-            current_slots = scan_all_districts(session, print_log=False)
+            current_slots = scan_all_districts(session, windows, start_ymd, max_ymd, print_log=False)
 
             valid_slots = []
             for s in current_slots:
