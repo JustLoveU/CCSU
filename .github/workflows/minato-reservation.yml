@@ -29,9 +29,14 @@ jobs:
 
       - name: Run reservation bot
         env:
-          RSV_USER_ID: ${{ secrets.MINATO_USER_ID }}
-          RSV_PASSWORD: ${{ secrets.MINATO_PASSWORD }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          RSV_USER_ID: ${{ secrets.RSV_USER_ID }}
+          RSV_PASSWORD: ${{ secrets.RSV_PASSWORD }}
+          MINATO_BASE_URL: ${{ secrets.MINATO_BASE_URL }}
+          MINATO_ALL_SCHOOLS: ${{ secrets.MINATO_ALL_SCHOOLS }}
+          MINATO_EXCLUDE_SCHOOLS: ${{ secrets.MINATO_EXCLUDE_SCHOOLS }}
+          MINATO_PRIORITY_SCHOOLS: ${{ secrets.MINATO_PRIORITY_SCHOOLS }}
+          SLACK_TLWEBHOOK_URL: ${{ secrets.TLSLACK_WEBHOOK_URL }}
+          
         run: |
           python minato_reserve.py
 
