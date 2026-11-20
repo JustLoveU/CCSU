@@ -37,8 +37,11 @@ jobs:
         env:
           SHINAGAWA_USER_ID: ${{ secrets.SHINAGAWA_USER_ID }}
           SHINAGAWA_PASSWORD: ${{ secrets.SHINAGAWA_PASSWORD }}
-
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SHINAGAWA_BASE_URL: ${{ secrets.SHINAGAWA_BASE_URL }}
+          SHINAGAWA_TIER1_SCHOOLS: ${{ secrets.SHINAGAWA_TIER1_SCHOOLS }}
+          SHINAGAWA_TIER2_SCHOOLS: ${{ secrets.SHINAGAWA_TIER2_SCHOOLS }}
+          SHINAGAWA_EXCLUDE_SCHOOLS: ${{ secrets.SHINAGAWA_EXCLUDE_SCHOOLS }}
+          TLSLACK_WEBHOOK_URL: ${{ secrets.TLSLACK_WEBHOOK_URL }}
 
         run: |
           python check_shinagawa.py \
